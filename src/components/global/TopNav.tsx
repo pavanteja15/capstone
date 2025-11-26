@@ -26,15 +26,13 @@ const TopNav :FC = ()=>{
 
     return (
 
-        <div className="topnav">
+        <div className="topnav-container">
 
-            <Navbar bg="white" expand="lg" className="px-3 shadow-sm" style={{height:"70px"}}>
+            <Navbar bg="white" expand="lg" className="topnav-navbar px-3 shadow-sm">
 
-                <Form className="d-flex w-100 me-3">
+                <Form className="topnav-search-form d-flex me-3">
 
-                    <FormControl type="search" placeholder="Search" className="rounded-pill ps-4 search-input"
-
-                    style={{backgroundColor:"#f1f1f1",height:"45px"}} />
+                    <FormControl type="search" placeholder="Search" className="topnav-search-input" />
 
                 </Form>
 
@@ -43,15 +41,15 @@ const TopNav :FC = ()=>{
 
                 <Dropdown align="end">
 
-                    <Dropdown.Toggle variant="light" id="dropdown-basic" className="border-0 bg-white p-0">
+                    <Dropdown.Toggle variant="light" id="topnav-dropdown" className="topnav-profile-toggle">
 
-                        <Image src="/assets/images/profile.webp" roundedCircle width={45} height={45} style={{cursor:"pointer"}}/>
+                        <Image src="/assets/images/profile.webp" className="topnav-profile-img" />
 
                     </Dropdown.Toggle>
 
-                    <Dropdown.Menu className="shadow">
+                    <Dropdown.Menu className="topnav-dropdown-menu shadow">
 
-                        <Dropdown.Header role="button" onClick={()=>navigate("/profile")}>
+                        <Dropdown.Header role="button" onClick={()=>navigate("/profile")} className="topnav-dropdown-header">
 
                             <strong>{username}</strong>
 

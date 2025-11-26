@@ -17,61 +17,61 @@ const   CategoryGrid = ()=>{
 
             title: "Animals",
 
-            image: "assets/categorys/Animals.webp"
+            image: "/categorys/animals.jpeg"
 
         },{
 
             title: "Anime",
 
-            image: "assets/categorys/anime.webp"
+            image: "/categorys/anime.jpeg"
 
         },{
 
             title: "Art",
 
-            image: "assets/categorys/art.webp"
+            image: "/categorys/art.jpeg"
 
         },{
 
             title: "Beauty",
 
-            image: "assets/categorys/beauty.webp"
+            image: "/categorys/beauty.jpeg"
 
         },{
 
             title: "Design",
 
-            image: "assets/categorys/Design.webp"
+            image: "/categorys/design.jpeg"
 
         },{
 
             title: "Fashion",
 
-            image: "assets/categorys/fashion.webp"
+            image: "/categorys/fashion.jpeg"
 
         },{
 
             title: "Food",
 
-            image: "assets/categorys/food.webp"
+            image: "/categorys/food.jpeg"
 
         },{
 
             title: "Home Decor",
 
-            image: "assets/categorys/homedecor.webp"
+            image: "/categorys/homedecor.jpeg"
 
         },{
 
             title: "Nature",
 
-            image: "assets/categorys/nature.webp"
+            image: "/categorys/nature.jpeg"
 
         },{
 
             title: "Quotes",
 
-            image: "assets/categorys/quotes.webp"
+            image: "/categorys/quotes.jpeg"
 
         },
 
@@ -92,11 +92,11 @@ const   CategoryGrid = ()=>{
 
                     <div className="col-12 col-sm-6 col-md-4" key={cat.title}>
 
-                        <div className="category-card position-relative" style={{backgroundImage:`url(${cat.image})`}}>
+                        <div className="explore-category-card position-relative" style={{backgroundImage:`url(${cat.image})`}}>
 
-                            <div className="overlay"></div>
+                            <div className="explore-category-overlay"></div>
 
-                            <h5 className="title text-white fw-bold">{cat.title}</h5>
+                            <h5 className="explore-category-title text-white fw-bold">{cat.title}</h5>
 
                         </div>
 

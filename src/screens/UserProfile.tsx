@@ -1,19 +1,6 @@
 import React, { useState } from "react";
 
-
- 
-
 import "./UserProfile.css";
-
-import pp from "../assets/profilepic1.jpg";
-
-
- 
-
-// Import your new components
-
-
- 
 
 import BoardsList from "../components/profile/ShowBoards";
 
@@ -22,6 +9,8 @@ import PinsList from "../components/profile/ShowPins";
 import SavedList from "../components/profile/ShowSaved";
 
 import TopNav from "../components/global/TopNav";
+
+const pp = "/assets/images/profilepic1.jpg";
 
 
  

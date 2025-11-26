@@ -1,195 +1,187 @@
 
-
- 
-
 import { FC, FormEvent, useEffect, useState } from "react";
 
 import Validator from "./Validator";
 
-import "./RegisterUser.css"
-
-import logo from "../src/assets/Pinterest-Logo.jpg"
+import "./RegisterUser.css";
 
 import axios from "axios";
 
+const logo = "/assets/images/Pinterest-Logo.jpg";
 
+interface UserState {
 
+    email: string;
 
- 
+    userName: string;
 
-interface UserState{
+    password: string;
 
-    email:string;
+    conformPassword: string;
 
-    userName:string;
+    fullName: string;
 
-    password:string;
+    mobile: string;
 
-    conformPassword:string;
+    bio: string;
 
-    fullName:string;
+    accountType: "NORMAL" | "BUSINESS";
 
-    mobile:string;
+    businessName?: string;
 
-    bio:string;
-
-    accountType:"NORMAL"|"BUSINESS";
-
-    businessName?:string;
-
-    websiteUrl?:string;
+    websiteUrl?: string;
 
 }
 
 
- 
 
-interface UserErrorState{
 
-    userNameError:string;
+interface UserErrorState {
 
-    emailError:string;
+    userNameError: string;
 
-    passwordError:string;
+    emailError: string;
 
-    mobileError:string;
+    passwordError: string;
 
-    fullNameError:string;
+    mobileError: string;
+
+    fullNameError: string;
 
 }
 
 
- 
-
-const RegisterUser:FC = ()=>{
-
-   
-
-    const[state, setState] = useState<UserState>({
-
-        email:"",
-
-        userName:"",
-
-        password:"",
-
-        conformPassword:"",
-
-        fullName:"",
-
-        mobile:"",
-
-        bio:"",
-
-        accountType:"NORMAL",
-
-        businessName:"",
-
-        websiteUrl:""
-
-    })
 
 
- 
+const RegisterUser: FC = () => {
 
-    const[formErrors, setFormErrors] = useState<UserErrorState>({
 
-        userNameError:"",
 
-        passwordError:"",
+    const [state, setState] = useState<UserState>({
 
-        emailError:"",
+        email: "",
 
-        mobileError:"",
+        userName: "",
 
-        fullNameError:""
+        password: "",
+
+        conformPassword: "",
+
+        fullName: "",
+
+        mobile: "",
+
+        bio: "",
+
+        accountType: "NORMAL",
+
+        businessName: "",
+
+        websiteUrl: ""
 
     })
 
 
- 
 
-    const handleChange = (event:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>)=>{
+
+    const [formErrors, setFormErrors] = useState<UserErrorState>({
+
+        userNameError: "",
+
+        passwordError: "",
+
+        emailError: "",
+
+        mobileError: "",
+
+        fullNameError: ""
+
+    })
+
+
+
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
 
         setState({
 
             ...state,
 
-            [event.target.name]:event.target.value
+            [event.target.name]: event.target.value
 
         })
 
-        validateField(event.target.name,event.target.value);
+        validateField(event.target.name, event.target.value);
 
     }
 
 
- 
-
-    const[passwordMatchError, setPasswordMatchError] = useState<string>("");
-
-    const[valid, setValid] = useState<boolean>(false);
 
 
- 
+    const [passwordMatchError, setPasswordMatchError] = useState<string>("");
 
-    useEffect(()=>{
+    const [valid, setValid] = useState<boolean>(false);
 
-        if(state.conformPassword && state.password !== state.conformPassword){
+
+
+
+    useEffect(() => {
+
+        if (state.conformPassword && state.password !== state.conformPassword) {
 
             setPasswordMatchError("passwords do not match");
 
         }
 
-        else{
+        else {
 
             setPasswordMatchError("");
 
         }
 
-    },[state.password,state.conformPassword]);
+    }, [state.password, state.conformPassword]);
 
 
 
- 
 
-    const validateField = (name:string, value:any):void =>{
+
+    const validateField = (name: string, value: any): void => {
 
         let errors = formErrors;
 
-        switch(name){
+        switch (name) {
 
             case "userName":
 
-                errors.userNameError = Validator.validateUserName(value) ? "":"Enter a valid username"
+                errors.userNameError = Validator.validateUserName(value) ? "" : "Enter a valid username"
 
                 break;
 
             case "password":
 
-                errors.passwordError = Validator.validatePassword(value) ?"":"Enter a valid password"
+                errors.passwordError = Validator.validatePassword(value) ? "" : "Enter a valid password"
 
                 break;
 
             case "mobile":
 
-                errors.mobileError = Validator.validateMobile(value) ? "":"Enter a valid mobile number"
+                errors.mobileError = Validator.validateMobile(value) ? "" : "Enter a valid mobile number"
 
                 break;
 
             case "email":
 
-                errors.emailError = Validator.validateEmail(value) ? "":"Enter a valid email"
+                errors.emailError = Validator.validateEmail(value) ? "" : "Enter a valid email"
 
                 break;
 
             case "fullName":
 
-                errors.fullNameError = Validator.validateFullName(value) ? "":"Enter a valid name"
+                errors.fullNameError = Validator.validateFullName(value) ? "" : "Enter a valid name"
 
                 break;
 
-           
+
 
             default:
 
@@ -199,27 +191,27 @@ const RegisterUser:FC = ()=>{
 
         setFormErrors(errors);
 
-        setValid(Validator.validateForm(state) && Object.values(errors).every((value)=>(value)===""));
+        setValid(Validator.validateForm(state) && Object.values(errors).every((value) => (value) === ""));
 
     }
 
 
 
- 
 
-    const handleSubmit = async (event:FormEvent)=>{
+
+    const handleSubmit = async (event: FormEvent) => {
 
         event.preventDefault();
 
-        try{
+        try {
 
-            await axios.post("http://localhost:8765/auth/registeruser",state);
+            await axios.post("http://localhost:8765/auth/registeruser", state);
 
             alert("regestered")
 
         }
 
-        catch(err){
+        catch (err) {
 
             alert("Failed")
 
@@ -228,9 +220,9 @@ const RegisterUser:FC = ()=>{
     }
 
 
- 
 
-    return(
+
+    return (
 
         <div className="register-container">
 
@@ -238,7 +230,7 @@ const RegisterUser:FC = ()=>{
 
                 <div className="logo-container">
 
-                    <img className="pinterest-logo" src={logo} alt="Pintrest Logo"/>
+                    <img className="pinterest-logo" src={logo} alt="Pintrest Logo" />
 
                 </div>
 
@@ -246,265 +238,265 @@ const RegisterUser:FC = ()=>{
 
                 <form onSubmit={handleSubmit}>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="userName">User Name</label>
+                        <label htmlFor="userName">User Name</label>
 
-                    <input type="text"
+                        <input type="text"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter your user name"
+                            placeholder="Enter your user name"
 
-                    name="userName"
+                            name="userName"
 
-                    id="userName"
+                            id="userName"
 
-                    value={state.userName}
+                            value={state.userName}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger">
+                        <span className="text-danger">
 
-                        {formErrors.userNameError}
+                            {formErrors.userNameError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="fullName">Full Name</label>
+                        <label htmlFor="fullName">Full Name</label>
 
-                    <input type="text"
+                        <input type="text"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter your Full name"
+                            placeholder="Enter your Full name"
 
-                    name="fullName"
+                            name="fullName"
 
-                    id="fullName"
+                            id="fullName"
 
-                    value={state.fullName}
+                            value={state.fullName}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger" data-testid="userNameError">
+                        <span className="text-danger" data-testid="userNameError">
 
-                        {formErrors.fullNameError}
+                            {formErrors.fullNameError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="bio">Bio</label>
+                        <label htmlFor="bio">Bio</label>
 
-                    <textarea
+                        <textarea
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter your user name"
+                            placeholder="Enter your user name"
 
-                    name="bio"
+                            name="bio"
 
-                    id="bio"
+                            id="bio"
 
-                    value={state.bio}
+                            value={state.bio}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="mobile">Mobile Number</label>
+                        <label htmlFor="mobile">Mobile Number</label>
 
-                    <input type="text"
+                        <input type="text"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter your mobile number"
+                            placeholder="Enter your mobile number"
 
-                    name="mobile"
+                            name="mobile"
 
-                    id="mobile"
+                            id="mobile"
 
-                    value={state.mobile}
+                            value={state.mobile}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger" data-testid="userNameError">
+                        <span className="text-danger" data-testid="userNameError">
 
-                        {formErrors.mobileError}
+                            {formErrors.mobileError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="email">Email</label>
+                        <label htmlFor="email">Email</label>
 
-                    <input type="email"
+                        <input type="email"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter your user email"
+                            placeholder="Enter your user email"
 
-                    name="email"
+                            name="email"
 
-                    id="email"
+                            id="email"
 
-                    value={state.email}
+                            value={state.email}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger" data-testid="userNameError">
+                        <span className="text-danger" data-testid="userNameError">
 
-                        {formErrors.emailError}
+                            {formErrors.emailError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="password">Password</label>
+                        <label htmlFor="password">Password</label>
 
-                    <input type="text"
+                        <input type="text"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter the password"
+                            placeholder="Enter the password"
 
-                    name="password"
+                            name="password"
 
-                    id="password"
+                            id="password"
 
-                    value={state.password}
+                            value={state.password}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger" data-testid="userNameError">
+                        <span className="text-danger" data-testid="userNameError">
 
-                        {formErrors.passwordError}
+                            {formErrors.passwordError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="conformPassword">Conform Password</label>
+                        <label htmlFor="conformPassword">Conform Password</label>
 
-                    <input type="text"
+                        <input type="text"
 
-                    className="form-control input-custom"
+                            className="form-control input-custom"
 
-                    placeholder="Enter the password again"
+                            placeholder="Enter the password again"
 
-                    name="conformPassword"
+                            name="conformPassword"
 
-                    id="conformPassword"
+                            id="conformPassword"
 
-                    value={state.conformPassword}
+                            value={state.conformPassword}
 
-                    onChange={handleChange}/>
+                            onChange={handleChange} />
 
-                    <span className="text-danger" data-testid="userNameError">
+                        <span className="text-danger" data-testid="userNameError">
 
-                        {passwordMatchError}
+                            {passwordMatchError}
 
-                    </span>
+                        </span>
 
-                </div>
+                    </div>
 
-                <div className="form-group mb-3">
+                    <div className="form-group mb-3">
 
-                    <label htmlFor="accountType">Account Type</label>
+                        <label htmlFor="accountType">Account Type</label>
 
-                    <select name="accountType" className="form-control input-custom" value={state.accountType} onChange={handleChange}>
+                        <select name="accountType" className="form-control input-custom" value={state.accountType} onChange={handleChange}>
 
-                    <option value="NORMAL">Normal Account</option>
+                            <option value="NORMAL">Normal Account</option>
 
-                    <option value="BUSINESS">Business Account</option>
+                            <option value="BUSINESS">Business Account</option>
 
-                    </select>
+                        </select>
 
-                </div>
+                    </div>
 
-                <div>
+                    <div>
 
-                    {state.accountType==="BUSINESS" && (
+                        {state.accountType === "BUSINESS" && (
 
-                        <div className="business-section animate-fade">
+                            <div className="business-section animate-fade">
 
-                            <div className="form-group mb-3">
+                                <div className="form-group mb-3">
 
-                            <label htmlFor="businessName">Business Name</label>
+                                    <label htmlFor="businessName">Business Name</label>
 
-                            <input type="text"
+                                    <input type="text"
 
-                                className="form-control input-custom"
+                                        className="form-control input-custom"
 
-                                placeholder="Enter the name of business"
+                                        placeholder="Enter the name of business"
 
-                                name="businessName"
+                                        name="businessName"
 
-                                id="businessName"
+                                        id="businessName"
 
-                               
 
-                                value={state.businessName}
 
-                                onChange={handleChange}/>
+                                        value={state.businessName}
+
+                                        onChange={handleChange} />
+
+                                </div>
+
+                                <div className="form-group mb-3">
+
+                                    <label htmlFor="websiteUrl">Website Url</label>
+
+                                    <input type="text"
+
+                                        className="form-control input-custom"
+
+                                        placeholder="Enter the business website url"
+
+                                        name="websiteUrl"
+
+                                        id="websiteUrl"
+
+
+
+                                        value={state.websiteUrl}
+
+                                        onChange={handleChange} />
+
+                                </div>
 
                             </div>
 
-                            <div className="form-group mb-3">
+                        )}
 
-                            <label htmlFor="websiteUrl">Website Url</label>
+                    </div>
 
-                            <input type="text"
+                    <br />
 
-                                className="form-control input-custom"
+                    <div className="text-center mt-4">
 
-                                placeholder="Enter the business website url"
+                        <button className="btn btn-danger pinterest-btn">Register</button>
 
-                                name="websiteUrl"
+                    </div>
 
-                                id="websiteUrl"
-
-                               
-
-                                value={state.websiteUrl}
-
-                                onChange={handleChange}/>
-
-                            </div>
-
-                        </div>
-
-                    )}
-
-                </div>
-
-                <br/>
-
-                <div className="text-center mt-4">
-
-                    <button className="btn btn-danger pinterest-btn">Register</button>
-
-                </div>
-
-            </form>
+                </form>
 
             </div>
 
-           
+
 
         </div>
 
@@ -514,6 +506,6 @@ const RegisterUser:FC = ()=>{
 
 
 
- 
+
 
 export default RegisterUser;

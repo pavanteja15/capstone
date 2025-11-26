@@ -1,70 +1,9 @@
-// import React from 'react';
-
-// import logo from './logo.svg';
-
-// import './App.css';
-
-
- 
-
-// function App() {
-
-//   return (
-
-//     <div className="App">
-
-//       <header className="App-header">
-
-//         <img src={logo} className="App-logo" alt="logo" />
-
-//         <p>
-
-//           Edit <code>src/App.tsx</code> and save to reload.
-
-//         </p>
-
-//         <a
-
-//           className="App-link"
-
-//           href="https://reactjs.org"
-
-//           target="_blank"
-
-//           rel="noopener noreferrer"
-
-//         >
-
-//           Learn React  
-
-//         </a>
-
-//       </header>
-
-//     </div>
-
-//   );
-
-// }
-
-
- 
-
-// export default App;
-
-
- 
 
 import { Routes, Route, BrowserRouter, Link } from "react-router-dom";
-
 import CreatePin from "./CreatePin"; 
-
 import SelectBoard from "./SelectBoard";
-
 import CreateBoardForm from "./CreateBoardForm";
-
 import Home from "./screens/home";
-
 import UserProfile from "./screens/UserProfile";
 
 import SideNav from "./components/global/SideNav";
@@ -84,6 +23,7 @@ import BoardViewPage from "./components/profile/BoardViewPage";
 import ShowBoards from "./components/profile/ShowBoards";
 
 import RegisterUser from "./RegisterUser";
+import PinterestHero from "./screens/pintrest";
 
 
 
@@ -113,7 +53,7 @@ export default function App() {
 
       <Routes>
 
-            <Route path="/" element={<CreatePin/>} />
+            <Route path="/" element={<PinterestHero/>} />
 
             <Route path="/select-board" element={<SelectBoard/>} />
 

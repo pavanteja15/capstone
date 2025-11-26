@@ -34,20 +34,20 @@ const SideNav :FC<SideNavProps> = ({openCreateMenu})=>{
 
         <>
 
-            <div className="sidebar d-flex flex-column align-items-center py-3">
+            <div className="sidenav-container d-flex flex-column align-items-center py-3">
 
-                <img onClick={()=>navigate("/home")} src="/assets/pinterest.webp" className="nav-icon mb-4" alt="Pinterest" />
+                <img onClick={()=>navigate("/home")} src="/assets/images/Pinterest-Logo.jpg" className="sidenav-logo mb-4" alt="Pinterest" />
 
 
  
 
-                <img onClick={()=>navigate("/home")} src="/assets/icons/home.webp" className="nav-icon my-3" alt="Home" />
+                <img onClick={()=>navigate("/home")} src="/icons/home.png" className="sidenav-icon my-3" alt="Home" />
 
-                <img onClick={()=>navigate("/explore")} src="/assets/icons/explore.webp" className="nav-icon my-3" alt="Discover" />
+                <img onClick={()=>navigate("/explore")} src="/icons/explore.jpg" className="sidenav-icon my-3" alt="Discover" />
 
-                <img onClick={()=>navigate("/board-view")} src="/assets/icons/layout.webp" className="nav-icon my-3" alt="Dashboard" />
+                <img onClick={()=>navigate("/board-view")} src="/icons/layout.png" className="sidenav-icon my-3" alt="Dashboard" />
 
-                <img onClick={()=>openCreateMenu()} src="/assets/icons/addpin.webp" className="nav-icon my-3" alt="create" />
+                <img onClick={()=>openCreateMenu()} src="/icons/addpin.jpeg" className="sidenav-icon my-3" alt="create" />
 
             </div>
 

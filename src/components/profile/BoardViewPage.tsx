@@ -4,18 +4,12 @@ import React from "react";
 
  
 
-import b1 from "../../../src/assets/one.jpg";
-
 import "./BoardViewPage.css";
 
-
- 
-
-import b4 from "../../../src/assets/two.jpg";
-
-import b2 from "../../../src/assets/three.jpg";
-
-import b3 from "../../../src/assets/four.jpg";
+const b1 = "/assets/images/one.jpg";
+const b4 = "/assets/images/two.jpg";
+const b2 = "/assets/images/three.jpg";
+const b3 = "/assets/images/four.jpg";
 
 
  

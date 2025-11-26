@@ -1,13 +1,10 @@
 
 import React from "react";
 
-import g1 from "../../assets/five.jpg";
-
-import g2 from "../../assets/seven.jpg";
-
-import g3 from "../../assets/eight.jpg";
-
-import g4 from "../../assets/nine.jpg";
+const g1 = "/assets/images/five.jpg";
+const g2 = "/assets/images/seven.jpg";
+const g3 = "/assets/images/eight.jpg";
+const g4 = "/assets/images/nine.jpg";
 
 
 

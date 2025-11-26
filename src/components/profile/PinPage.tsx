@@ -7,14 +7,9 @@ import ExploreGrid from "./ExploreGrid";
 
 import "./PinPage.css";
 
-
- 
-
-import a1 from "../../assets/one.jpg";
-
-import a2 from "../../assets/two.jpg";
-
-import p3 from "../../assets/three.jpg";
+const a1 = "/assets/images/one.jpg";
+const a2 = "/assets/images/two.jpg";
+const p3 = "/assets/images/three.jpg";
 
 
  

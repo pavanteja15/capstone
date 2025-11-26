@@ -1,19 +1,11 @@
 
 import React from "react";
 
-
- 
-
 import "./TabSection.css";
 
-
- 
-
-import b1 from "../../../src/assets/nine.jpg";
-
-import b2 from "../../../src/assets/eleven.jpg";
-
-import b3 from "../../../src/assets/twelve.jpg";
+const b1 = "/assets/images/nine.jpg";
+const b2 = "/assets/images/eleven.jpg";
+const b3 = "/assets/images/twelve.jpg";
 
 
 

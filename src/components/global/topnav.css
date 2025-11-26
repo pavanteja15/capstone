@@ -1,33 +1,69 @@
 
-.topnav{
+/* TopNav Component Styles - Scoped to prevent leaking */
 
+.topnav-container {
     position: fixed;
-
     top: 0;
-
     left: 70px;
-
     right: 0;
-
     height: 70px;
-
     background: white;
-
     border-bottom: 1px solid #e7e7e7;
-
     z-index: 999;
-
 }
 
+.topnav-container .topnav-navbar {
+    height: 70px;
+}
 
- 
+.topnav-container .topnav-search-form {
+    flex: 1;
+}
 
-/* .search-input{
-
-    background: #f1f1f1 !important;
-
+.topnav-container .topnav-search-input {
+    background-color: #f1f1f1;
     height: 45px;
-
     border: none;
+    border-radius: 50rem;
+    padding-left: 1rem;
+    width: 100%;
+}
 
-} */
+.topnav-container .topnav-search-input:focus {
+    background-color: #f1f1f1;
+    box-shadow: none;
+    border: 2px solid #0074e8;
+}
+
+.topnav-container .topnav-profile-toggle {
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+.topnav-container .topnav-profile-toggle::after {
+    display: none;
+}
+
+.topnav-container .topnav-profile-img {
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.topnav-container .topnav-dropdown-menu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+    border-radius: 12px;
+    padding: 8px 0;
+}
+
+.topnav-container .topnav-dropdown-header {
+    cursor: pointer;
+}
+
+.topnav-container .topnav-dropdown-header:hover {
+    background-color: #f5f5f5;
+}

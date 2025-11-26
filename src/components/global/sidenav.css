@@ -1,42 +1,35 @@
 
-.sidebar{
+/* SideNav Component Styles - Scoped to prevent leaking */
 
+.sidenav-container {
     width: 70px;
-
     height: 100vh;
-
     border-right: 1px solid #e5e5e5;
-
     background: white;
-
     position: fixed;
-
     top: 0;
-
     left: 0;
-
     z-index: 998;
-
 }
 
-
- 
-
-.nav-icon{
-
+.sidenav-container .sidenav-icon {
     width: 28px;
-
     height: 28px;
-
     cursor: pointer;
-
+    transition: opacity 0.2s ease;
 }
 
-
- 
-
-.nav-icon:hover{
-
+.sidenav-container .sidenav-icon:hover {
     opacity: 0.7;
+}
 
+.sidenav-container .sidenav-logo {
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.sidenav-container .sidenav-logo:hover {
+    opacity: 0.7;
 }
