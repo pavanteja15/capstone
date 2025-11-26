@@ -1,0 +1,142 @@
+
+
+ 
+
+.register-container {
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 40px 10px;
+
+}
+
+
+ 
+
+.register-card {
+
+  width: 420px;
+
+  background: #ffffff;
+
+  padding: 35px;
+
+  border-radius: 18px;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+
+  animation: fadeIn 0.5s ease-in-out;
+
+}
+
+
+ 
+
+.logo-container {
+
+  display: flex;
+
+  justify-content: center;
+
+  margin-bottom: -20px;
+
+}
+
+
+ 
+
+.pinterest-logo {
+
+  width: 150px;
+
+  height: 150px;
+
+}
+
+
+ 
+
+.input-custom {
+
+  border-radius: 12px !important;
+
+  padding: 10px 14px !important;
+
+  border: 1px solid #ddd !important;
+
+  transition: 0.2s ease-in-out;
+
+}
+
+
+ 
+
+.input-custom:focus {
+
+  border-color: #e60023 !important;
+
+  box-shadow: 0 0 5px rgba(230, 0, 35, 0.3);
+
+}
+
+
+ 
+
+.pinterest-btn {
+
+  background-color: #e60023 !important;
+
+  padding: 10px 35px !important;
+
+  border-radius: 25px !important;
+
+  font-size: 18px;
+
+  transition: 0.3s;
+
+}
+
+
+ 
+
+.pinterest-btn:hover {
+
+  background-color: #b8001c !important;
+
+}
+
+
+ 
+
+.business-section {
+
+  animation: fadeIn 0.4s ease-in-out;
+
+}
+
+
+ 
+
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(12px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0px);
+
+  }
+
+}

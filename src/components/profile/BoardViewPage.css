@@ -1,0 +1,348 @@
+
+
+.board-wrapper {
+
+
+ 
+
+  max-width: 900px;
+
+
+ 
+
+}
+
+
+ 
+
+/* ---- Top Section ---- */
+
+
+ 
+
+.board-header {
+
+
+ 
+
+  display: flex;
+
+
+ 
+
+  gap: 20px;
+
+
+ 
+
+  align-items: center;
+
+
+ 
+
+  margin-bottom: 25px;
+
+
+ 
+
+}
+
+
+ 
+
+.board-cover-img {
+
+
+ 
+
+  width: 300px;
+
+
+ 
+
+  height: 300px;
+
+
+ 
+
+  border-radius: 12px;
+
+
+ 
+
+  object-fit: cover;
+
+
+ 
+
+}
+
+
+ 
+
+.board-info {
+
+
+ 
+
+  flex: 1;
+
+
+ 
+
+}
+
+
+ 
+
+.board-name {
+
+
+ 
+
+  font-size: 32px;
+
+
+ 
+
+  font-weight: bold;
+
+
+ 
+
+  margin: 0;
+
+
+ 
+
+}
+
+
+ 
+
+.board-desc {
+
+
+ 
+
+  font-size: 16px;
+
+
+ 
+
+  margin: 5px 0 15px;
+
+
+ 
+
+  color: #444;
+
+
+ 
+
+}
+
+
+ 
+
+.board-actions {
+
+
+ 
+
+  display: flex;
+
+
+ 
+
+  gap: 10px;
+
+
+ 
+
+}
+
+
+ 
+
+.action-btn {
+
+
+ 
+
+  border-radius: 25px !important;
+
+
+ 
+
+  padding: 8px 18px;
+
+
+ 
+
+  font-weight: 500;
+
+
+ 
+
+}
+
+
+ 
+
+/* ---- Pins ---- */
+
+
+ 
+
+.pins-title {
+
+
+ 
+
+  margin-top: 25px;
+
+
+ 
+
+  margin-bottom: 15px;
+
+
+ 
+
+  font-weight: bold;
+
+
+ 
+
+}
+
+
+ 
+
+.pins-grid {
+
+
+ 
+
+  display: grid;
+
+
+ 
+
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+
+
+ 
+
+  gap: 16px;
+
+
+ 
+
+}
+
+
+ 
+
+.pin-card {
+
+
+ 
+
+  border-radius: 10px;
+
+
+ 
+
+  overflow: hidden;
+
+
+ 
+
+  background: #fff;
+
+
+ 
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+
+ 
+
+  transition: transform 0.15s ease;
+
+
+ 
+
+}
+
+
+ 
+
+.pin-card:hover {
+
+
+ 
+
+  transform: scale(1.03);
+
+
+ 
+
+}
+
+
+ 
+
+.pin-img {
+
+
+ 
+
+  width: 100%;
+
+
+ 
+
+  height: 280px;
+
+
+ 
+
+  object-fit: cover;
+
+
+ 
+
+}
+
+
+ 
+
+.pin-title {
+
+
+ 
+
+  padding: 8px;
+
+
+ 
+
+  font-size: 14px;
+
+
+ 
+
+  text-align: center;
+
+
+ 
+
+  font-weight: 500;
+
+
+ 
+
+}

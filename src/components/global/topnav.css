@@ -1,0 +1,33 @@
+
+.topnav{
+
+    position: fixed;
+
+    top: 0;
+
+    left: 70px;
+
+    right: 0;
+
+    height: 70px;
+
+    background: white;
+
+    border-bottom: 1px solid #e7e7e7;
+
+    z-index: 999;
+
+}
+
+
+ 
+
+/* .search-input{
+
+    background: #f1f1f1 !important;
+
+    height: 45px;
+
+    border: none;
+
+} */

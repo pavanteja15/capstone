@@ -1,0 +1,907 @@
+
+
+
+.profile-wrapper {
+
+ min-height: 100vh;
+
+ background: white;
+
+ color: black;
+
+ text-align: center;
+
+ margin-top: 70px;
+
+ padding-top: 40px;
+
+ position: relative;
+
+ font-family: "Arial", sans-serif;
+
+}
+
+
+ 
+
+.top-buttons {
+
+ position: absolute;
+
+ top: 20px;
+
+ right: 20px;
+
+ display: flex;
+
+ gap: 12px;
+
+}
+
+
+ 
+
+.top-btn {
+
+ background: red;
+
+ border: none;
+
+ padding: 10px 18px;
+
+ border-radius: 20px;
+
+ color: white;
+
+ cursor: pointer;
+
+ font-size: 16px;
+
+ font-weight: bold;
+
+}
+
+
+
+ 
+
+.profile-pic {
+
+ width: 140px;
+
+ height: 140px;
+
+ border-radius: 50%;
+
+ background: hotpink;
+
+ object-fit: cover;
+
+ cursor: pointer;
+
+}
+
+
+ 
+
+.profile-name {
+
+ font-size: 30px;
+
+ margin-top: 15px;
+
+ font-weight: bold;
+
+}
+
+
+ 
+
+.username {
+
+ color: #666;
+
+ font-size: 20px;
+
+ margin-top: -5px;
+
+}
+
+
+ 
+
+.follow-row {
+
+ margin-top: 10px;
+
+ display: flex;
+
+ justify-content: center;
+
+ gap: 10px;
+
+ font-size: 18px;
+
+}
+
+
+ 
+
+.follow-row span {
+
+ cursor: pointer;
+
+ font-weight: 600;
+
+}
+
+
+
+
+ 
+
+.tab {
+
+ background: red;
+
+ border: none;
+
+ color: white;
+
+ font-size: 18px;
+
+ padding: 8px 18px;
+
+ border-radius: 20px;
+
+ cursor: pointer;
+
+}
+
+
+ 
+
+.tab.active {
+
+ font-weight: bold;
+
+}
+
+
+ 
+
+.empty-text {
+
+ margin-top: 40px;
+
+ font-size: 20px;
+
+ color: #777;
+
+}
+
+
+
+ 
+
+.popup-overlay {
+
+ position: fixed;
+
+ top: 0;
+
+ left: 0;
+
+ width: 100%;
+
+ height: 100%;
+
+ background: rgba(0,0,0,0.55);
+
+ display: flex;
+
+ justify-content: center;
+
+ align-items: center;
+
+}
+
+
+ 
+
+.popup-close-star{
+
+  position: absolute;
+
+  top: 10px;
+
+  right: 10px;
+
+  font-size: 22px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  z-index: 10;
+
+}
+
+
+
+ 
+
+.popup-box {
+
+ background: white;
+
+ position: relative;
+
+ width: 500px;
+
+ padding: 24px;
+
+ border-radius: 12px;
+
+ text-align: center;
+
+ color: black;
+
+ font-size: 15px;
+
+}
+
+
+ 
+
+.popup-box ul {
+
+ list-style: none;
+
+ padding: 0;
+
+ margin: 0;
+
+}
+
+
+ 
+
+.popup-box li {
+
+ display: flex;
+
+ align-items: center;
+
+ justify-content: space-between;
+
+ border-bottom: 1px solid #ddd;
+
+ padding: 12px 2px;
+
+ font-size: 17px;
+
+}
+
+
+ 
+
+.popup-user-info {
+
+ display: flex;
+
+ align-items: center;
+
+}
+
+
+ 
+
+.popup-user-pic {
+
+ width: 44px;
+
+ height: 44px;
+
+ border-radius: 50%;
+
+ object-fit: cover;
+
+ background: #eee;
+
+ margin-right: 12px;
+
+ border: 1px solid #ccc;
+
+}
+
+
+ 
+
+.popup-user-details {
+
+ text-align: left;
+
+}
+
+
+ 
+
+.popup-user-details .popup-user-name {
+
+ font-weight: bold;
+
+ font-size: 17px;
+
+}
+
+
+ 
+
+.popup-user-details .popup-user-bio {
+
+ color: #666;
+
+ font-size: 13px;
+
+}
+
+
+
+ 
+
+.unfollow-btn,
+
+.remove-btn {
+
+ padding: 7px 18px;
+
+ background: grey;
+
+ color: white;
+
+ border: none;
+
+ border-radius: 8px;
+
+ font-size: 14px;
+
+ cursor: pointer;
+
+}
+
+
+ 
+
+.close-btn {
+
+ margin-top: 1px;
+
+ position: absolute;
+
+ padding: 8px 10px;
+
+ background: rgb(254, 253, 254);
+
+ color: rgb(14, 13, 13);
+
+ border: none;
+
+ border-radius: 10px;
+
+ font-size: 16px;
+
+ cursor: pointer;
+
+}
+
+
+
+ 
+
+.popup-image-box img {
+
+ width: 420px;
+
+ border-radius: 12px;
+
+}
+
+
+
+
+
+ 
+
+/* ==== BOARD GRID ==== */
+
+
+ 
+
+.boards-container {
+
+  margin-top: 30px;
+
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+
+  gap: 25px;
+
+  padding: 0 20px;
+
+}
+
+
+ 
+
+.board-card {
+
+  position: relative;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+}
+
+
+ 
+
+.board-cover {
+
+  width: 100%;
+
+  height: 260px;
+
+  object-fit: cover;
+
+  border-radius: 18px;
+
+  display: block;
+
+}
+
+
+ 
+
+/* Hover Layer */
+
+
+ 
+
+.board-hover {
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  background: rgba(0,0,0,0.55);
+
+  color: white;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  text-align: center;
+
+  padding: 20px;
+
+  opacity: 0;
+
+  transition: 0.3s;
+
+}
+
+
+ 
+
+.board-card:hover .board-hover {
+
+  opacity: 1;
+
+}
+
+
+ 
+
+/* ==== PINS GRID ==== */
+
+
+ 
+
+.pins-container {
+
+  margin-top: 30px;
+
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+  gap: 20px;
+
+  padding: 0 20px;
+
+}
+
+
+ 
+
+.pin-card img {
+
+  width: 100%;
+
+  border-radius: 14px;
+
+  object-fit: cover;
+
+}
+
+
+
+ 
+
+/* New Pinterest style edit profile button */
+
+
+ 
+
+.edit-profile-btn {
+
+
+ 
+
+  margin-top: 18px;
+
+
+ 
+
+  background: #efefef;
+
+
+ 
+
+  border: none;
+
+
+ 
+
+  padding: 12px 22px;
+
+
+ 
+
+  font-size: 17px;
+
+
+ 
+
+  border-radius: 20px;
+
+
+ 
+
+  cursor: pointer;
+
+
+ 
+
+  font-weight: 600;
+
+
+ 
+
+}
+
+
+ 
+
+/* TABS — Pinterest style */
+
+
+ 
+
+.tabs-pinterest {
+
+
+ 
+
+  margin-top: 28px;
+
+
+ 
+
+  display: flex;
+
+
+ 
+
+  justify-content: center;
+
+
+ 
+
+  gap: 40px;
+
+
+ 
+
+  border-bottom: 2px solid #e3e3e3;
+
+
+ 
+
+  padding-bottom: 10px;
+
+
+ 
+
+  width: 100%;
+
+
+ 
+
+}
+
+
+ 
+
+.tab-p {
+
+
+ 
+
+  background: transparent;
+
+
+ 
+
+  border: none;
+
+
+ 
+
+  font-size: 18px;
+
+
+ 
+
+  padding: 6px 10px;
+
+
+ 
+
+  cursor: pointer;
+
+
+ 
+
+  color: #444;
+
+
+ 
+
+}
+
+
+ 
+
+.tab-p.active {
+
+
+ 
+
+  border-bottom: 3px solid black;
+
+
+ 
+
+  font-weight: bold;
+
+
+ 
+
+  color: black;
+
+
+ 
+
+}
+
+
+ 
+
+.tabs {
+
+
+ 
+
+  margin-top: 25px;
+
+
+ 
+
+  display: flex;
+
+
+ 
+
+  justify-content: center;
+
+
+ 
+
+  gap: 35px;
+
+
+ 
+
+}
+
+
+ 
+
+.tab-text {
+
+
+ 
+
+  background: none;
+
+
+ 
+
+  border: none;
+
+
+ 
+
+  font-size: 20px;
+
+
+ 
+
+  padding-bottom: 8px;
+
+
+ 
+
+  cursor: pointer;
+
+
+ 
+
+  color: #444;
+
+
+ 
+
+  font-weight: 500;
+
+
+ 
+
+}
+
+
+ 
+
+.active-tab {
+
+
+ 
+
+  border-bottom: 3px solid black;
+
+
+ 
+
+  font-weight: 700;
+
+
+ 
+
+  color: black;
+
+
+ 
+
+}
+
+
+
+
+ 
+
+.profile-buttons {
+
+
+ 
+
+  margin-top: 18px;
+
+
+ 
+
+  display: flex;
+
+
+ 
+
+  justify-content: center;
+
+
+ 
+
+  gap: 12px;
+
+
+ 
+
+}
+
+
+ 
+
+.profile-btn {
+
+
+ 
+
+  background: #f1f1f1;
+
+
+ 
+
+  padding: 10px 20px;
+
+
+ 
+
+  border-radius: 25px;
+
+
+ 
+
+  border: 1px solid #ddd;
+
+
+ 
+
+  font-size: 16px;
+
+
+ 
+
+  cursor: pointer;
+
+
+ 
+
+  font-weight: 600;
+
+
+ 
+
+  color: #333;
+
+
+ 
+
+}
+
+
+ 

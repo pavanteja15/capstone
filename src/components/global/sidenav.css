@@ -1,0 +1,42 @@
+
+.sidebar{
+
+    width: 70px;
+
+    height: 100vh;
+
+    border-right: 1px solid #e5e5e5;
+
+    background: white;
+
+    position: fixed;
+
+    top: 0;
+
+    left: 0;
+
+    z-index: 998;
+
+}
+
+
+ 
+
+.nav-icon{
+
+    width: 28px;
+
+    height: 28px;
+
+    cursor: pointer;
+
+}
+
+
+ 
+
+.nav-icon:hover{
+
+    opacity: 0.7;
+
+}

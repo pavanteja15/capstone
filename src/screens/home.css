@@ -1,0 +1,227 @@
+
+.masonry-container{
+
+    column-count:6;
+
+    column-gap:15px;
+
+    padding: 20px;
+
+}
+
+
+ 
+
+.pin-card{
+
+    break-inside:avoid;
+
+    margin-bottom: 15px;
+
+}
+
+
+ 
+
+.pin-image{
+
+    transition: transform 0.2s;
+
+    cursor:pointer;
+
+}
+
+
+ 
+
+.pin-image:hover{
+
+    transform: scale(1.02);
+
+    filter: brightness(0.95);
+
+}
+
+
+
+ 
+
+.pin-card{
+
+    position: relative;
+
+    margin-bottom: 20px;
+
+}
+
+
+ 
+
+.pin-wrapper{
+
+    position: relative;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+}
+
+
+ 
+
+.pin-image{
+
+    width: 100%;
+
+    display: block;
+
+    border-radius: 12px;
+
+}
+
+
+ 
+
+.pin-overlay{
+
+    position: absolute;
+
+    top: 0;
+
+    left: 0;
+
+    width: 100%;
+
+    height: 100%;
+
+    padding: 10px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    align-items: flex-end;
+
+
+ 
+
+    opacity: 0;
+
+    transition: opacity 0.2s ease;
+
+}
+
+
+
+ 
+
+.pin-wrapper:hover .pin-overlay{
+
+    opacity: 1;
+
+}
+
+
+ 
+
+.pin-overlay::before{
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0));
+
+    border-radius: 12px;
+
+    pointer-events: none;
+
+}
+
+
+ 
+
+.btn-save, .right-buttons{
+
+    position: relative;
+
+    z-index: 2;
+
+}
+
+
+
+ 
+
+.btn-save{
+
+    background-color: red;
+
+    color: white;
+
+    border: none;
+
+    padding: 8px 18px;
+
+    border-radius: 25px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+}
+
+
+ 
+
+.right-buttons{
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+}
+
+
+ 
+
+.btn-icon{
+
+    background: white;
+
+    border: none;
+
+    width: 33px;
+
+    height: 33px;
+
+    border-radius: 10px;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+
+
+ 
