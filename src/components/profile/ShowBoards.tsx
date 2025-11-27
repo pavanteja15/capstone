@@ -1,6 +1,6 @@
 
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 import "./TabSection.css";
 
 const b1 = "/assets/images/nine.jpg";
@@ -78,6 +78,24 @@ const boards: Board[] = [
  
 
 const ShowBoards: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleCreateBoard = () => {
+    navigate("/create-board");
+  };
+
+  const handleBoardClick = (board: Board) => {
+    navigate("/viewboard", { 
+      state: { 
+        board: {
+          id: board.id,
+          name: board.title,
+          description: board.description,
+          cover: board.coverImg
+        }
+      } 
+    });
+  };
 
 
  
@@ -87,17 +105,12 @@ const ShowBoards: React.FC = () => {
 
  
 
-    <div className="tab-section">
+    <div className="boards-section">
 
 
  
 
-      <h3 className="section-title">Your Boards</h3>
-
-
- 
-
-      <div className="grid-container">
+      <div className="boards-grid">
 
 
  
@@ -107,48 +120,37 @@ const ShowBoards: React.FC = () => {
 
  
 
-          <div key={b.id} className="grid-card">
-
-
- 
-
-            <div className="img-wrapper">
-
-
- 
-
-              <img src={b.coverImg} alt={b.title} className="grid-img" />
-
-              <div className="img-overlay">
-
-                <p>{b.description}</p>
-
-
- 
-
-              </div>
-
-             
-
-
- 
-
+          <div 
+            key={b.id} 
+            className="board-card"
+            onClick={() => handleBoardClick(b)}
+          >
+            <div 
+              className="board-cover" 
+              style={{ backgroundImage: `url(${b.coverImg})` }}
+            >
+              <div className="board-cover-overlay"></div>
+              <h5 className="board-card-title">{b.title}</h5>
             </div>
-
-
- 
-
-            <p className="grid-title">{b.title}</p>
-
-
- 
-
           </div>
 
 
  
 
         ))}
+
+        {/* Create Board Card */}
+        <div className="board-card create-board-card" onClick={handleCreateBoard}>
+          <div className="board-cover create-cover">
+            <div className="create-grid">
+              <div className="create-grid-item"></div>
+              <div className="create-grid-item"></div>
+              <div className="create-grid-item"></div>
+              <div className="create-grid-item"></div>
+            </div>
+            <button className="create-board-btn">Create</button>
+          </div>
+        </div>
 
 
  

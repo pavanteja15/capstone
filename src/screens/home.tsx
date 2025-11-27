@@ -1,5 +1,6 @@
 
 import React, { FC, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 
  
@@ -18,6 +19,7 @@ interface MenuPosition {
 
 const   Home: FC = ()=> {
 
+    const navigate = useNavigate();
 
  
 
@@ -37,7 +39,7 @@ const   Home: FC = ()=> {
 
         "/assets/images/two.jpg",
 
-        "/assets/images/three.jpg",
+        "/assets/images/three.jpg",     
 
         "/assets/images/eight.jpg",
 
@@ -66,10 +68,26 @@ const   Home: FC = ()=> {
 
     const boardslist = ["Nature", "Space", "Anime"];
 
-
- 
-
     const boards = ["All", ...boardslist]
+
+    const handleBoardSelect = (board: string) => {
+        setSelectedBoard(board);
+    };
+
+    const handlePinClick = (imgSrc: string) => {
+        navigate("/viewpin", {
+            state: {
+                pin: {
+                    image: imgSrc,
+                    title: "Beautiful Pin",
+                    description: "Discover amazing content on Pinterest.",
+                    likes: Math.floor(Math.random() * 500) + 50,
+                    userName: "Pinterest User",
+                    userProfile: "/assets/images/three.jpg"
+                }
+            }
+        });
+    };
 
     
     const handleMenuToggle = (index: number, e: React.MouseEvent) => {
@@ -116,6 +134,20 @@ const   Home: FC = ()=> {
         <>
 
             <TopNav/>
+
+            <div className="home-board-filter">
+                <div className="home-board-filter-scroll">
+                    {boards.map((board) => (
+                        <button
+                            key={board}
+                            className={`home-board-chip ${selectedBoard === board ? 'active' : ''}`}
+                            onClick={() => handleBoardSelect(board)}
+                        >
+                            {board}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {/* Overlay to close menu when clicking outside */}
             {activeMenuIndex !== null && (
@@ -170,9 +202,12 @@ const   Home: FC = ()=> {
 
                             <div className="home-pin-wrapper">
 
-                                <img className="home-pin-image"
-
-                                src={imgSrc} alt={`Pin ${index + 1}`} />
+                                <img 
+                                    className="home-pin-image"
+                                    src={imgSrc} 
+                                    alt={`Pin ${index + 1}`}
+                                    onClick={() => handlePinClick(imgSrc)}
+                                />
 
 
  

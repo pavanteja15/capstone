@@ -1,7 +1,209 @@
-import React from 'react';
+import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import Validator from '../../Validator';
 import './SignupSection.css';
 
+type AccountType = 'NORMAL' | 'BUSINESS';
+type StepType = 'BASIC_INFO' | 'PROFILE_SECURITY' | 'BUSINESS';
+
+interface UserState {
+  email: string;
+  userName: string;
+  password: string;
+  conformPassword: string;
+  fullName: string;
+  mobile: string;
+  bio: string;
+  accountType: AccountType;
+  businessName?: string;
+  websiteUrl?: string;
+}
+
+interface UserErrorState {
+  userNameError: string;
+  emailError: string;
+  passwordError: string;
+  mobileError: string;
+  fullNameError: string;
+}
+
+const initialState: UserState = {
+  email: '',
+  userName: '',
+  password: '',
+  conformPassword: '',
+  fullName: '',
+  mobile: '',
+  bio: '',
+  accountType: 'NORMAL',
+  businessName: '',
+  websiteUrl: ''
+};
+
+const stepLabels: Record<StepType, string> = {
+  BASIC_INFO: 'Account info',
+  PROFILE_SECURITY: 'Profile & security',
+  BUSINESS: 'Business details'
+};
+
+const baseSteps: StepType[] = ['BASIC_INFO', 'PROFILE_SECURITY'];
+
 const SignupSection: React.FC = () => {
+  const [state, setState] = useState<UserState>(initialState);
+  const [formErrors, setFormErrors] = useState<UserErrorState>({
+    userNameError: '',
+    passwordError: '',
+    emailError: '',
+    mobileError: '',
+    fullNameError: ''
+  });
+  const [passwordMatchError, setPasswordMatchError] = useState('');
+  const [step, setStep] = useState<StepType>('BASIC_INFO');
+  const [submitting, setSubmitting] = useState(false);
+
+  const isBusinessFlow = state.accountType === 'BUSINESS';
+  const steps = useMemo<StepType[]>(() => (isBusinessFlow ? [...baseSteps, 'BUSINESS'] : baseSteps), [isBusinessFlow]);
+  const currentStepIndex = steps.indexOf(step);
+
+  useEffect(() => {
+    if (state.conformPassword && state.password !== state.conformPassword) {
+      setPasswordMatchError('Passwords do not match');
+    } else {
+      setPasswordMatchError('');
+    }
+  }, [state.password, state.conformPassword]);
+
+  useEffect(() => {
+    if (!isBusinessFlow && step === 'BUSINESS') {
+      setStep('PROFILE_SECURITY');
+    }
+  }, [isBusinessFlow, step]);
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = event.target;
+    setState((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (name === 'accountType') {
+      setStep('BASIC_INFO');
+    }
+
+    validateField(name, value);
+  };
+
+  const validateField = (name: string, value: string): void => {
+    setFormErrors((prev) => {
+      const errors = { ...prev };
+      switch (name) {
+        case 'userName':
+          errors.userNameError = Validator.validateUserName(value) ? '' : 'Enter a valid username';
+          break;
+        case 'password':
+          errors.passwordError = Validator.validatePassword(value) ? '' : 'Enter a valid password';
+          break;
+        case 'mobile':
+          errors.mobileError = Validator.validateMobile(value) ? '' : 'Enter a valid mobile number';
+          break;
+        case 'email':
+          errors.emailError = Validator.validateEmail(value) ? '' : 'Enter a valid email';
+          break;
+        case 'fullName':
+          errors.fullNameError = Validator.validateFullName(value) ? '' : 'Enter a valid name';
+          break;
+        default:
+          break;
+      }
+      return errors;
+    });
+  };
+
+  const basicInfoValid = useMemo(() => {
+    const hasValues = state.email.trim() && state.userName.trim() && state.fullName.trim();
+    const hasErrors =
+      !!formErrors.emailError || !!formErrors.userNameError || !!formErrors.fullNameError;
+    return Boolean(hasValues) && !hasErrors;
+  }, [state.email, state.userName, state.fullName, formErrors.emailError, formErrors.userNameError, formErrors.fullNameError]);
+
+  const profileSecurityValid = useMemo(() => {
+    const hasValues = state.mobile.trim() && state.password.trim() && state.conformPassword.trim();
+    const hasErrors =
+      !!formErrors.mobileError || !!formErrors.passwordError || !!passwordMatchError;
+    return Boolean(hasValues) && !hasErrors;
+  }, [state.mobile, state.password, state.conformPassword, formErrors.mobileError, formErrors.passwordError, passwordMatchError]);
+
+  const businessStepValid = useMemo(() => {
+    if (!isBusinessFlow) {
+      return true;
+    }
+    return Boolean(state.businessName?.trim() && state.websiteUrl?.trim());
+  }, [isBusinessFlow, state.businessName, state.websiteUrl]);
+
+  const isStepValid = (stepType: StepType) => {
+    switch (stepType) {
+      case 'BASIC_INFO':
+        return basicInfoValid;
+      case 'PROFILE_SECURITY':
+        return profileSecurityValid;
+      case 'BUSINESS':
+        return businessStepValid;
+      default:
+        return false;
+    }
+  };
+
+  const allStepsValid = steps.every((stepType: StepType) => isStepValid(stepType));
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!isStepValid(step)) {
+      return;
+    }
+
+    const isLastStep = currentStepIndex === steps.length - 1;
+
+    if (!isLastStep) {
+      const nextStep = steps[currentStepIndex + 1];
+      if (nextStep) {
+        setStep(nextStep);
+      }
+      return;
+    }
+
+    if (!allStepsValid) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await axios.post('http://localhost:8765/auth/registeruser', state);
+      alert('Registered successfully');
+      setState(initialState);
+      setStep('BASIC_INFO');
+    } catch (err) {
+      alert('Failed to register');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    if (currentStepIndex > 0) {
+      const previousStep = steps[currentStepIndex - 1];
+      if (previousStep) {
+        setStep(previousStep);
+      }
+    }
+  };
+
+  const isLastStep = currentStepIndex === steps.length - 1;
+  const primaryButtonLabel = submitting ? 'Registering...' : isLastStep ? 'Register' : 'Next';
+  const isPrimaryDisabled = submitting || !isStepValid(step);
+
   return (
     <section className="signup-section">
       {/* Background Image Grid */}
@@ -63,34 +265,160 @@ const SignupSection: React.FC = () => {
         <h3>Welcome to Pinterest</h3>
         <p className="signup-subtitle">Find new ideas to try</p>
 
-        <form className="signup-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input type="email" id="email" placeholder="Email" />
+        <form className="signup-form" onSubmit={handleSubmit}>
+          <div className="signup-stepper">
+            {steps.map((stepName: StepType) => (
+              <span key={stepName} className={step === stepName ? 'active' : ''}>
+                {stepLabels[stepName]}
+              </span>
+            ))}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input">
-              <input type="password" id="password" placeholder="Create a password" />
-              <button type="button" className="toggle-password">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#767676">
-                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                </svg>
+          {step === 'BASIC_INFO' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Email"
+                  value={state.email}
+                  onChange={handleChange}
+                />
+                {formErrors.emailError && <span className="error-text">{formErrors.emailError}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="userName">Username</label>
+                <input
+                  type="text"
+                  id="userName"
+                  name="userName"
+                  placeholder="Pick a username"
+                  value={state.userName}
+                  onChange={handleChange}
+                />
+                {formErrors.userNameError && <span className="error-text">{formErrors.userNameError}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="fullName">Full name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  placeholder="Enter your full name"
+                  value={state.fullName}
+                  onChange={handleChange}
+                />
+                {formErrors.fullNameError && <span className="error-text">{formErrors.fullNameError}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="accountType">Account type</label>
+                <select id="accountType" name="accountType" value={state.accountType} onChange={handleChange}>
+                  <option value="NORMAL">Personal</option>
+                  <option value="BUSINESS">Business</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {step === 'PROFILE_SECURITY' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="bio">Bio</label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  placeholder="Tell people about yourself"
+                  value={state.bio}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="mobile">Mobile number</label>
+                <input
+                  type="tel"
+                  id="mobile"
+                  name="mobile"
+                  placeholder="Enter your mobile number"
+                  value={state.mobile}
+                  onChange={handleChange}
+                />
+                {formErrors.mobileError && <span className="error-text">{formErrors.mobileError}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Create a password"
+                  value={state.password}
+                  onChange={handleChange}
+                />
+                {formErrors.passwordError && <span className="error-text">{formErrors.passwordError}</span>}
+                <span className="password-hint">Use 8 or more letters, numbers and symbols</span>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="conformPassword">Confirm password</label>
+                <input
+                  type="password"
+                  id="conformPassword"
+                  name="conformPassword"
+                  placeholder="Re-enter your password"
+                  value={state.conformPassword}
+                  onChange={handleChange}
+                />
+                {passwordMatchError && <span className="error-text">{passwordMatchError}</span>}
+              </div>
+            </>
+          )}
+
+          {isBusinessFlow && step === 'BUSINESS' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="businessName">Business name</label>
+                <input
+                  type="text"
+                  id="businessName"
+                  name="businessName"
+                  placeholder="Enter your business name"
+                  value={state.businessName}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="websiteUrl">Website</label>
+                <input
+                  type="url"
+                  id="websiteUrl"
+                  name="websiteUrl"
+                  placeholder="https://your-company.com"
+                  value={state.websiteUrl}
+                  onChange={handleChange}
+                />
+              </div>
+            </>
+          )}
+
+          {currentStepIndex > 0 && (
+            <div className="step-actions">
+              <button type="button" className="btn-secondary" onClick={handleGoBack}>
+                Back
               </button>
             </div>
-            <span className="password-hint">Use 8 or more letters, numbers and symbols</span>
-          </div>
+          )}
 
-          <div className="form-group">
-            <label htmlFor="birthdate">
-              Birthdate
-              <span className="info-icon">ⓘ</span>
-            </label>
-            <input type="date" id="birthdate" placeholder="dd-mm-yyyy" />
-          </div>
-
-          <button type="submit" className="btn-continue">Continue</button>
+          <button type="submit" className="btn-continue" disabled={isPrimaryDisabled}>
+            {primaryButtonLabel}
+          </button>
 
           <div className="divider">
             <span>OR</span>
@@ -115,7 +443,19 @@ const SignupSection: React.FC = () => {
           </p>
         </form>
 
-        <button className="btn-business">Create a free business account</button>
+        <button
+          type="button"
+          className="btn-business"
+          onClick={() => {
+            setState((prev) => ({
+              ...prev,
+              accountType: 'BUSINESS'
+            }));
+            setStep('BASIC_INFO');
+          }}
+        >
+          Create a free business account
+        </button>
       </div>
     </section>
   );

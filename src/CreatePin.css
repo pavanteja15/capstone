@@ -395,6 +395,89 @@
 
 }
 
+/* Board Picker Dropdown */
+.board-picker-dropdown {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.board-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.create-new-board-btn {
+    background: none;
+    border: none;
+    color: #e60023;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.create-new-board-btn:hover {
+    text-decoration: underline;
+}
+
+.board-picker-list {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.board-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.board-picker-item:hover {
+    background: #f5f5f5;
+}
+
+.board-picker-item.selected {
+    background: #fff0f0;
+}
+
+.board-picker-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.board-picker-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: #111;
+}
+
+.board-picker-check {
+    flex-shrink: 0;
+}
+
+.section-row .right {
+    display: flex;
+    align-items: center;
+    color: #767676;
+    font-size: 14px;
+}
 
  
 

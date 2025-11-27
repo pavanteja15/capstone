@@ -5,6 +5,19 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 
 import "./CreatePin.css";
 
+type Board = {
+  id: number;
+  title: string;
+  coverImg: string;
+};
+
+const availableBoards: Board[] = [
+  { id: 1, title: "Travel Ideas", coverImg: "/assets/images/nine.jpg" },
+  { id: 2, title: "Recipes", coverImg: "/assets/images/eleven.jpg" },
+  { id: 3, title: "Workout", coverImg: "/assets/images/twelve.jpg" },
+  { id: 4, title: "Home Decor", coverImg: "/assets/images/one.jpg" },
+  { id: 5, title: "Fashion", coverImg: "/assets/images/two.jpg" },
+];
 
  
 
@@ -27,8 +40,9 @@ export default function CreatePin(){
         const [boardName, setBoardName] = useState("");
 
         const [description, setDescription] = useState("");
-
    
+        const [showBoardPicker, setShowBoardPicker] = useState(false);
+        const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
 
         // const [isSecret, setIsSecret] = useState(false);
 
@@ -42,6 +56,11 @@ export default function CreatePin(){
 
             }
 
+        };
+
+        const handleSelectBoard = (board: Board) => {
+            setSelectedBoard(board);
+            setShowBoardPicker(false);
         };
 
    
@@ -261,19 +280,45 @@ export default function CreatePin(){
 
             </div>
 
-<Link to = "/select-board">
-
-            <div className="section-row">
-
+<div className="section-row" onClick={() => setShowBoardPicker(prev => !prev)}>
                 <span>Pick a board</span>
-
-                <span className="right"></span>
-
+                <span className="right">
+                    {selectedBoard ? selectedBoard.title : "Select"}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#767676" style={{ marginLeft: 8 }}>
+                        <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                </span>
             </div>
 
-            </Link>
+            {showBoardPicker && (
+                <div className="board-picker-dropdown">
+                    <div className="board-picker-header">
+                        <span>Your boards</span>
+                        <button className="create-new-board-btn" onClick={() => navigate("/create-board")}>
+                            + Create board
+                        </button>
+                    </div>
+                    <div className="board-picker-list">
+                        {availableBoards.map((board) => (
+                            <div 
+                                key={board.id} 
+                                className={`board-picker-item ${selectedBoard?.id === board.id ? 'selected' : ''}`}
+                                onClick={() => handleSelectBoard(board)}
+                            >
+                                <img src={board.coverImg} alt={board.title} className="board-picker-img" />
+                                <span className="board-picker-title">{board.title}</span>
+                                {selectedBoard?.id === board.id && (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#e60023" className="board-picker-check">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </svg>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
-            {selectedBoardFromPage && (
+            {selectedBoardFromPage && !selectedBoard && (
 
                 <div className="selected-board-dispaly">{selectedBoardFromPage}</div>
 

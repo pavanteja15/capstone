@@ -159,6 +159,22 @@
   transition: border-color 0.2s;
 }
 
+.form-group select,
+.form-group textarea {
+  padding: 14px 16px;
+  border: 2px solid #cdcdcd;
+  border-radius: 16px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
 .form-group input:focus {
   border-color: #0074e8;
 }
@@ -190,6 +206,52 @@
 .password-hint {
   font-size: 12px;
   color: #767676;
+}
+
+.error-text {
+  font-size: 12px;
+  color: #e60023;
+}
+
+.signup-stepper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #767676;
+}
+
+.signup-stepper span {
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.signup-stepper span.active {
+  color: #111;
+  border-color: #e60023;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin: 8px 0;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #cdcdcd;
+  border-radius: 24px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover {
+  border-color: #111;
+  color: #111;
 }
 
 /* Buttons */

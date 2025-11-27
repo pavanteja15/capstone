@@ -6,7 +6,54 @@
     column-gap: 16px;
     padding: 20px;
     margin-left: 70px;
-    margin-top: 70px;
+    margin-top: 20px;
+}
+
+.home-board-filter {
+    margin-left: 90px;
+    margin-right: 40px;
+    margin-top: 80px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.home-board-filter-scroll {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.home-board-filter-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.home-board-chip {
+    background: none;
+    border: none;
+    padding: 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #767676;
+    cursor: pointer;
+    position: relative;
+}
+
+.home-board-chip.active {
+    color: #111;
+    font-weight: 600;
+}
+
+.home-board-chip.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -12px;
+    width: 100%;
+    height: 3px;
+    background-color: #111;
+    border-radius: 999px;
 }
 
 /* Responsive column counts */
@@ -39,6 +86,10 @@
         column-count: 2;
         margin-left: 0;
         padding: 10px;
+    }
+
+    .home-board-filter {
+        margin: 80px 16px 8px 16px;
     }
 }
 

@@ -1,5 +1,5 @@
 
-import { Routes, Route, BrowserRouter, Link } from "react-router-dom";
+import { Routes, Route, BrowserRouter, useLocation } from "react-router-dom";
 import CreatePin from "./CreatePin"; 
 import SelectBoard from "./SelectBoard";
 import CreateBoardForm from "./CreateBoardForm";
@@ -24,30 +24,24 @@ import ShowBoards from "./components/profile/ShowBoards";
 
 import RegisterUser from "./RegisterUser";
 import PinterestHero from "./screens/pintrest";
+import ViewPin from "./screens/ViewPin";
+import ViewBoard from "./screens/ViewBoard";
 
 
 
  
 
-export default function App() {
-
+const AppRoutes = () => {
   const [showMenu,setShowMenu] = useState(false);
+  const location = useLocation();
+  const hideSideNavRoutes = ["/"];
+  const shouldShowSideNav = !hideSideNavRoutes.includes(location.pathname);
 
- return (
-
-
- 
-
-  <>
-
-
- 
-
-   
-
-    <BrowserRouter>
-
-      <SideNav openCreateMenu={()=>setShowMenu(true)}/>
+  return (
+    <>
+      {shouldShowSideNav && (
+        <SideNav openCreateMenu={()=>setShowMenu(true)}/>
+      )}
 
       {showMenu && <CreateMenu closeMenu={()=> setShowMenu(false)}/>}
 
@@ -69,7 +63,7 @@ export default function App() {
 
             <Route path="/explore" element={<Explore/>}/>
 
-            <Route path="/viewpin" element={<PinPage/>}/>
+            <Route path="/viewpin" element={<ViewPin/>}/>
 
             <Route path="/board-view" element={<ShowBoards/>}/>
 
@@ -77,18 +71,17 @@ export default function App() {
 
             <Route path="/board-viewpage" element={<BoardViewPage/>}/>
 
+            <Route path="/viewboard" element={<ViewBoard/>}/>
+
       </Routes>
+    </>
+  );
+};
 
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
-
-
-
- 
-
-  </>
-
-
-
- );
-
+  );
 }
