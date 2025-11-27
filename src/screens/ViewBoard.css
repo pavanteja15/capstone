@@ -266,3 +266,400 @@
     font-size: 24px;
   }
 }
+
+/* Collaborator Button */
+.viewboard-collab-btn {
+  background: #f0f0f0;
+  border: none;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+}
+
+.viewboard-collab-btn:hover {
+  background: #e0e0e0;
+}
+
+.collab-count {
+  background: #e60023;
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Collaborator Modal */
+.collab-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.collab-modal {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.collab-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #efefef;
+}
+
+.collab-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+}
+
+.collab-modal-close {
+  background: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.collab-modal-close:hover {
+  background: #f0f0f0;
+}
+
+/* Tabs */
+.collab-tabs {
+  display: flex;
+  border-bottom: 1px solid #efefef;
+  padding: 0 24px;
+}
+
+.collab-tab {
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #767676;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+}
+
+.collab-tab:hover {
+  color: #111;
+}
+
+.collab-tab.active {
+  color: #111;
+}
+
+.collab-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #111;
+  border-radius: 3px 3px 0 0;
+}
+
+.tab-badge {
+  background: #e60023;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Modal Content */
+.collab-modal-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Invite Section */
+.collab-invite-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.collab-invite-text {
+  font-size: 14px;
+  color: #767676;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.collab-invite-input-wrapper {
+  display: flex;
+  gap: 12px;
+}
+
+.collab-invite-input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 2px solid #cdcdcd;
+  border-radius: 16px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.collab-invite-input:focus {
+  border-color: #111;
+}
+
+.collab-send-btn {
+  background: #e60023;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.collab-send-btn:hover:not(:disabled) {
+  background: #ad081b;
+}
+
+.collab-send-btn:disabled {
+  background: #e0e0e0;
+  color: #767676;
+  cursor: not-allowed;
+}
+
+/* Lists */
+.collab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.collab-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  transition: background 0.2s;
+}
+
+.collab-item:hover {
+  background: #f5f5f5;
+}
+
+.collab-item.owner {
+  background: #fff8e6;
+}
+
+.collab-item-avatar {
+  width: 48px;
+  height: 48px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.collab-item-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.collab-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.collab-item-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+}
+
+.collab-item-email {
+  font-size: 13px;
+  color: #767676;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collab-item-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.collab-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.collab-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.collab-status.accepted {
+  background: #d4edda;
+  color: #155724;
+}
+
+.collab-status.declined {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.collab-role {
+  font-size: 12px;
+  font-weight: 600;
+  color: #767676;
+  padding: 4px 10px;
+  background: #f0f0f0;
+  border-radius: 12px;
+}
+
+.owner-badge {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.collab-cancel-btn,
+.collab-remove-btn {
+  background: none;
+  border: 1px solid #cdcdcd;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collab-cancel-btn:hover,
+.collab-remove-btn:hover {
+  background: #f0f0f0;
+  border-color: #111;
+}
+
+/* Empty State */
+.collab-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.collab-empty p {
+  margin: 16px 0 0 0;
+  font-size: 14px;
+  color: #767676;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .collab-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .collab-invite-input-wrapper {
+    flex-direction: column;
+  }
+
+  .collab-send-btn {
+    width: 100%;
+  }
+
+  .collab-item {
+    flex-wrap: wrap;
+  }
+
+  .collab-cancel-btn,
+  .collab-remove-btn {
+    margin-left: auto;
+  }
+}
+
+/* Leave Board Section */
+.collab-leave-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #efefef;
+  display: flex;
+  justify-content: center;
+}
+
+.collab-leave-btn {
+  background: #fff;
+  border: 2px solid #e60023;
+  color: #e60023;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collab-leave-btn:hover {
+  background: #e60023;
+  color: white;
+}
+
+.collab-leave-btn svg {
+  transition: fill 0.2s;
+}

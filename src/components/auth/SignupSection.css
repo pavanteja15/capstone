@@ -413,3 +413,19 @@
     height: 120px;
   }
 }
+
+/* Forgot Password Link */
+.forgot-password {
+  display: block;
+  text-align: right;
+  color: #111;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: -8px;
+  margin-bottom: 16px;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}

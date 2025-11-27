@@ -26,6 +26,11 @@ import RegisterUser from "./RegisterUser";
 import PinterestHero from "./screens/pintrest";
 import ViewPin from "./screens/ViewPin";
 import ViewBoard from "./screens/ViewBoard";
+import Collabs from "./screens/Collabs";
+import ViewProfile from "./screens/ViewProfile";
+import Search from "./screens/Search";
+import BusinessProfiles from "./screens/BusinessProfiles";
+import Sponsored from "./screens/Sponsored";
 
 
 
@@ -72,6 +77,16 @@ const AppRoutes = () => {
             <Route path="/board-viewpage" element={<BoardViewPage/>}/>
 
             <Route path="/viewboard" element={<ViewBoard/>}/>
+
+            <Route path="/collabs" element={<Collabs/>}/>
+
+            <Route path="/viewprofile" element={<ViewProfile/>}/>
+
+            <Route path="/search" element={<Search/>}/>
+
+            <Route path="/business-profiles" element={<BusinessProfiles/>}/>
+
+            <Route path="/sponsored" element={<Sponsored/>}/>
 
       </Routes>
     </>

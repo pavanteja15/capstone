@@ -33,3 +33,22 @@
 .sidenav-container .sidenav-logo:hover {
     opacity: 0.7;
 }
+
+.sidenav-container .sidenav-icon-wrapper {
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidenav-container .sidenav-icon-wrapper:hover {
+    opacity: 0.7;
+}
+
+.sidenav-container .sidenav-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+}

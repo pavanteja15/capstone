@@ -1,0 +1,506 @@
+.search-page {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.search-content {
+  margin-left: 70px;
+  margin-top: 80px;
+  padding: 24px 32px;
+  max-width: 100%;
+}
+
+/* Search Header */
+.search-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.search-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 8px 0;
+}
+
+.search-count {
+  font-size: 16px;
+  color: #767676;
+  margin: 0;
+}
+
+/* Filter Tabs */
+.search-filters {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.search-filter {
+  background: #f0f0f0;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-filter:hover {
+  background: #e0e0e0;
+}
+
+.search-filter.active {
+  background: #111;
+  color: #fff;
+}
+
+.filter-count {
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.search-filter.active .filter-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Loading State */
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #e60023;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.search-loading p {
+  font-size: 16px;
+  color: #767676;
+  margin: 0;
+}
+
+/* Empty State */
+.search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.search-empty-icon {
+  width: 100px;
+  height: 100px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.search-empty h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 8px 0;
+}
+
+.search-empty p {
+  font-size: 16px;
+  color: #767676;
+  margin: 0;
+}
+
+/* Search Sections */
+.search-section {
+  margin-bottom: 48px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 24px 0;
+  padding-left: 8px;
+}
+
+.see-more-btn {
+  background: none;
+  border: none;
+  color: #111;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 0;
+  margin-top: 16px;
+  transition: color 0.2s;
+}
+
+.see-more-btn:hover {
+  color: #767676;
+}
+
+/* People Grid */
+.search-people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.search-user-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-user-card:hover {
+  background: #f5f5f5;
+}
+
+.search-user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.search-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-user-username {
+  font-size: 14px;
+  color: #767676;
+  margin: 0 0 4px 0;
+}
+
+.search-user-followers {
+  font-size: 13px;
+  color: #767676;
+  margin: 0;
+}
+
+.search-follow-btn {
+  background: #e60023;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.search-follow-btn:hover {
+  background: #ad081b;
+}
+
+.search-follow-btn.following {
+  background: #111;
+}
+
+.search-follow-btn.following:hover {
+  background: #333;
+}
+
+/* Boards Grid */
+.search-boards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.search-board-card {
+  cursor: pointer;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.search-board-card:hover {
+  transform: translateY(-4px);
+}
+
+.search-board-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.search-board-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.search-board-card:hover .search-board-cover img {
+  transform: scale(1.05);
+}
+
+.search-board-info {
+  padding: 12px 4px;
+}
+
+.search-board-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-board-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #767676;
+}
+
+.search-board-owner-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.search-board-owner {
+  font-weight: 500;
+}
+
+.search-board-pins {
+  color: #999;
+}
+
+.search-board-pins::before {
+  content: '•';
+  margin-right: 8px;
+}
+
+/* Pins Masonry */
+.search-pins-masonry {
+  column-count: 6;
+  column-gap: 16px;
+  width: 100%;
+}
+
+.search-pin-card {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  cursor: pointer;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.search-pin-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px 16px 0 0;
+}
+
+.search-pin-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 60px;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 16px 16px 0 0;
+}
+
+.search-pin-card:hover .search-pin-overlay {
+  opacity: 1;
+}
+
+.search-pin-save-btn {
+  background: #e60023;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-pin-save-btn:hover {
+  background: #ad081b;
+}
+
+.search-pin-info {
+  padding: 12px;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+}
+
+.search-pin-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-pin-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #767676;
+}
+
+.search-pin-user img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 1600px) {
+  .search-pins-masonry {
+    column-count: 5;
+  }
+}
+
+@media (max-width: 1400px) {
+  .search-pins-masonry {
+    column-count: 4;
+  }
+}
+
+@media (max-width: 1100px) {
+  .search-pins-masonry {
+    column-count: 3;
+  }
+
+  .search-boards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .search-people-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .search-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .search-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-pins-masonry {
+    column-count: 2;
+    column-gap: 12px;
+  }
+
+  .search-pin-card {
+    margin-bottom: 12px;
+  }
+
+  .search-boards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .search-people-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-title {
+    font-size: 22px;
+  }
+
+  .search-filters {
+    gap: 6px;
+  }
+
+  .search-filter {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .search-user-card {
+    padding: 12px;
+  }
+
+  .search-user-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .search-follow-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}

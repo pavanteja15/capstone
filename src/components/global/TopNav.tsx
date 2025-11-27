@@ -1,5 +1,5 @@
 
-import React, { FC } from "react";
+import React, { FC, useState, KeyboardEvent } from "react";
 
 import { Navbar, Form, FormControl, Dropdown, Image } from "react-bootstrap";
 
@@ -16,10 +16,23 @@ const TopNav :FC = ()=>{
 
     const AccountType = "personal";
 
-
- 
+    const [searchQuery, setSearchQuery] = useState("");
 
     const navigate = useNavigate();
+
+    const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            e.preventDefault();
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
 
  
@@ -30,9 +43,16 @@ const TopNav :FC = ()=>{
 
             <Navbar bg="white" expand="lg" className="topnav-navbar px-3 shadow-sm">
 
-                <Form className="topnav-search-form d-flex me-3">
+                <Form className="topnav-search-form d-flex me-3" onSubmit={handleSearchSubmit}>
 
-                    <FormControl type="search" placeholder="Search" className="topnav-search-input" />
+                    <FormControl 
+                        type="search" 
+                        placeholder="Search" 
+                        className="topnav-search-input" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleSearch}
+                    />
 
                 </Form>
 

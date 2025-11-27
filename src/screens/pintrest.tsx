@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './pintrest.css';
 import SignupSection from '../components/auth/SignupSection';
 
+type AuthMode = 'signup' | 'login';
+
 // 1. Define Data Structure
 interface SlideData {
   title: string;
@@ -55,6 +57,15 @@ const slides: SlideData[] = [
 
 const PinterestHero: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [authMode, setAuthMode] = useState<AuthMode>('signup');
+
+  const scrollToAuth = (mode: AuthMode) => {
+    setAuthMode(mode);
+    const authSection = document.getElementById('auth-section');
+    if (authSection) {
+      authSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     // Cycle through slides every 4 seconds
@@ -85,8 +96,8 @@ const PinterestHero: React.FC = () => {
           <a href="#" className="nav-link">Businesses</a>
           <a href="#" className="nav-link">Create</a>
           <a href="#" className="nav-link">News</a>
-          <button className="btn-login">Log in</button>
-          <button className="btn-signup">Sign up</button>
+          <button className="btn-login" onClick={() => scrollToAuth('login')}>Log in</button>
+          <button className="btn-signup" onClick={() => scrollToAuth('signup')}>Sign up</button>
         </div>
       </nav>
 
@@ -346,7 +357,7 @@ const PinterestHero: React.FC = () => {
       </section>
 
       {/* Signup Section */}
-      <SignupSection />
+      <SignupSection initialMode={authMode} />
     </div>
   );
 };
