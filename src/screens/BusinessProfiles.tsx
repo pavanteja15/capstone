@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import SideNav from "../components/global/SideNav";
 import TopNav from "../components/global/TopNav";
 import CreateMenu from "../components/global/CreateMenu";
+import { useAppSelector } from "../store/hooks";
+import { mapMediaPath } from "../utils/userMapper";
 import "./BusinessProfiles.css";
+
+const API_BASE_URL = "http://localhost:8765";
+const FALLBACK_AVATAR = "/assets/images/profilepic1.jpg";
+const FALLBACK_COVER = "/assets/images/one.jpg";
 
 type BusinessProfile = {
   id: number;
@@ -18,183 +25,77 @@ type BusinessProfile = {
   website: string;
   isFollowing: boolean;
   verified: boolean;
+  ownerId: number;
 };
 
 const BusinessProfiles: React.FC = () => {
   const navigate = useNavigate();
+  const user = useAppSelector((state) => state.user);
+  const userId = user.userId;
+  
   const [showMenu, setShowMenu] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [followingIds, setFollowingIds] = useState<Set<number>>(new Set());
 
-  const [businesses, setBusinesses] = useState<BusinessProfile[]>([
-    {
-      id: 1,
-      name: "Nike",
-      username: "nike",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/one.jpg",
-      category: "Sports & Fitness",
-      description: "Just Do It. Official Nike Pinterest account for sports inspiration and athletic wear.",
-      followers: 2500000,
-      pins: 1250,
-      website: "nike.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 2,
-      name: "IKEA",
-      username: "ikea",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/two.jpg",
-      category: "Home & Decor",
-      description: "Creating a better everyday life for everyone. Home furnishing ideas and inspiration.",
-      followers: 1800000,
-      pins: 3420,
-      website: "ikea.com",
-      isFollowing: true,
-      verified: true
-    },
-    {
-      id: 3,
-      name: "Whole Foods Market",
-      username: "wholefoods",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/three.jpg",
-      category: "Food & Beverage",
-      description: "America's Healthiest Grocery Store. Recipes, tips, and food inspiration.",
-      followers: 950000,
-      pins: 2890,
-      website: "wholefoodsmarket.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 4,
-      name: "Sephora",
-      username: "sephora",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/four.jpg",
-      category: "Beauty & Cosmetics",
-      description: "The beauty authority. Makeup tutorials, skincare tips, and product inspiration.",
-      followers: 3200000,
-      pins: 4560,
-      website: "sephora.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 5,
-      name: "Etsy",
-      username: "etsy",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/five.jpg",
-      category: "Handmade & Crafts",
-      description: "Find things you'll love. Handmade, vintage, and unique goods.",
-      followers: 1450000,
-      pins: 5670,
-      website: "etsy.com",
-      isFollowing: true,
-      verified: true
-    },
-    {
-      id: 6,
-      name: "Airbnb",
-      username: "airbnb",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/seven.jpg",
-      category: "Travel & Hospitality",
-      description: "Belong anywhere. Travel inspiration and unique stays around the world.",
-      followers: 2100000,
-      pins: 1890,
-      website: "airbnb.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 7,
-      name: "Lululemon",
-      username: "lululemon",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/eight.jpg",
-      category: "Sports & Fitness",
-      description: "Technical athletic apparel for yoga, running, and training.",
-      followers: 890000,
-      pins: 1230,
-      website: "lululemon.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 8,
-      name: "West Elm",
-      username: "westelm",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/nine.jpg",
-      category: "Home & Decor",
-      description: "Modern furniture and home decor. Sustainably sourced materials.",
-      followers: 750000,
-      pins: 2340,
-      website: "westelm.com",
-      isFollowing: true,
-      verified: true
-    },
-    {
-      id: 9,
-      name: "Tasty",
-      username: "buzzfeedtasty",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/one.jpg",
-      category: "Food & Beverage",
-      description: "Easy recipes and cooking videos. Food that brings people together.",
-      followers: 4500000,
-      pins: 8920,
-      website: "tasty.co",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 10,
-      name: "Glossier",
-      username: "glossier",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/two.jpg",
-      category: "Beauty & Cosmetics",
-      description: "Skin first. Makeup second. Smile always. Beauty essentials.",
-      followers: 1200000,
-      pins: 890,
-      website: "glossier.com",
-      isFollowing: false,
-      verified: true
-    },
-    {
-      id: 11,
-      name: "Anthropologie",
-      username: "anthropologie",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/three.jpg",
-      category: "Fashion & Lifestyle",
-      description: "Lifestyle brand offering clothing, accessories, and home decor.",
-      followers: 980000,
-      pins: 3450,
-      website: "anthropologie.com",
-      isFollowing: true,
-      verified: true
-    },
-    {
-      id: 12,
-      name: "REI",
-      username: "rei",
-      avatar: "/assets/images/profilepic1.jpg",
-      coverImage: "/assets/images/four.jpg",
-      category: "Travel & Hospitality",
-      description: "Life outdoors is a life well lived. Outdoor gear and adventure inspiration.",
-      followers: 670000,
-      pins: 2100,
-      website: "rei.com",
-      isFollowing: false,
-      verified: true
-    },
-  ]);
+  // Fetch business profiles from API
+  useEffect(() => {
+    const fetchBusinessProfiles = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/business`);
+        const data = response.data ?? [];
+        
+        const mapped: BusinessProfile[] = data
+          .filter((bp: any) => bp.ownerId !== userId) // Exclude current user's business profile
+          .map((bp: any) => ({
+          id: bp.businessProfileId,
+          name: bp.businessName || bp.ownerFullName || "Business",
+          username: bp.ownerUsername || bp.ownerFullName?.toLowerCase().replace(/\s+/g, '') || "business",
+          avatar: mapMediaPath(bp.ownerProfilePicUrl, API_BASE_URL) || FALLBACK_AVATAR,
+          coverImage: mapMediaPath(bp.coverImageUrl, API_BASE_URL) || FALLBACK_COVER,
+          category: bp.category || "General",
+          description: bp.description || "",
+          followers: bp.followerCount ?? 0,
+          pins: bp.totalPins ?? 0,
+          website: bp.websiteUrl || "",
+          isFollowing: false,
+          verified: bp.verified ?? false,
+          ownerId: bp.ownerId
+        }));
+        
+        setBusinesses(mapped);
+        
+        // If user is logged in, check which businesses they follow
+        if (userId) {
+          try {
+            const followingRes = await axios.get(`${API_BASE_URL}/follow/${userId}/following`);
+            const followingList = followingRes.data ?? [];
+            const followingSet = new Set<number>(followingList.map((f: any) => f.id));
+            setFollowingIds(followingSet);
+            
+            // Update isFollowing for each business
+            setBusinesses(prev => prev.map(b => ({
+              ...b,
+              isFollowing: followingSet.has(b.ownerId)
+            })));
+          } catch (err) {
+            console.error("Error fetching following list:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching business profiles:", err);
+        setError("Failed to load business profiles");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusinessProfiles();
+  }, [userId]);
 
   const categories = [
     { key: 'all', label: 'All' },
@@ -220,26 +121,59 @@ const BusinessProfiles: React.FC = () => {
     return count.toString();
   };
 
-  const handleFollowToggle = (id: number, e: React.MouseEvent) => {
+  const handleFollowToggle = async (business: BusinessProfile, e: React.MouseEvent) => {
     e.stopPropagation();
-    setBusinesses(prev => prev.map(business => 
-      business.id === id 
-        ? { ...business, isFollowing: !business.isFollowing, followers: business.isFollowing ? business.followers - 1 : business.followers + 1 }
-        : business
-    ));
+    
+    if (!userId) {
+      alert("Please login to follow businesses");
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      if (business.isFollowing) {
+        // Unfollow
+        await axios.delete(`${API_BASE_URL}/follow/${userId}/unfollow/${business.ownerId}`);
+        setBusinesses(prev => prev.map(b => 
+          b.id === business.id 
+            ? { ...b, isFollowing: false, followers: b.followers - 1 }
+            : b
+        ));
+        setFollowingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(business.ownerId);
+          return newSet;
+        });
+      } else {
+        // Follow
+        await axios.post(`${API_BASE_URL}/follow/${userId}/follow/${business.ownerId}`);
+        setBusinesses(prev => prev.map(b => 
+          b.id === business.id 
+            ? { ...b, isFollowing: true, followers: b.followers + 1 }
+            : b
+        ));
+        setFollowingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.add(business.ownerId);
+          return newSet;
+        });
+      }
+    } catch (err) {
+      console.error("Error toggling follow:", err);
+    }
   };
 
   const handleBusinessClick = (business: BusinessProfile) => {
     navigate("/viewprofile", {
       state: {
         user: {
-          id: business.id,
+          id: business.ownerId,
           name: business.name,
           username: business.username,
           avatar: business.avatar,
           bio: business.description,
           followers: business.followers,
-          following: 50,
+          following: 0,
           isFollowing: business.isFollowing
         }
       }
@@ -272,74 +206,97 @@ const BusinessProfiles: React.FC = () => {
           ))}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="business-loading">
+            <p>Loading business profiles...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="business-error">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && filteredBusinesses.length === 0 && (
+          <div className="business-empty">
+            <p>No business profiles found{activeCategory !== 'all' ? ` in ${activeCategory}` : ''}</p>
+          </div>
+        )}
+
         {/* Business Cards Grid */}
-        <div className="business-grid">
-          {filteredBusinesses.map(business => (
-            <div 
-              key={business.id} 
-              className="business-card"
-              onClick={() => handleBusinessClick(business)}
-            >
-              {/* Cover Image */}
-              <div className="business-card-cover">
-                <img src={business.coverImage} alt={business.name} />
-              </div>
+        {!loading && !error && filteredBusinesses.length > 0 && (
+          <div className="business-grid">
+            {filteredBusinesses.map(business => (
+              <div 
+                key={business.id} 
+                className="business-card"
+                onClick={() => handleBusinessClick(business)}
+              >
+                {/* Cover Image */}
+                <div className="business-card-cover">
+                  <img src={business.coverImage} alt={business.name} />
+                </div>
 
-              {/* Profile Section */}
-              <div className="business-card-profile">
-                <div className="business-card-avatar-wrapper">
-                  <img src={business.avatar} alt={business.name} className="business-card-avatar" />
-                  {business.verified && (
-                    <div className="business-verified-badge">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#0076D3">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                      </svg>
+                {/* Profile Section */}
+                <div className="business-card-profile">
+                  <div className="business-card-avatar-wrapper">
+                    <img src={business.avatar} alt={business.name} className="business-card-avatar" />
+                    {business.verified && (
+                      <div className="business-verified-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#0076D3">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Info Section */}
+                <div className="business-card-info">
+                  <div className="business-card-name-row">
+                    <h3 className="business-card-name">{business.name}</h3>
+                  </div>
+                  <p className="business-card-username">@{business.username}</p>
+                  <span className="business-card-category">{business.category}</span>
+                  <p className="business-card-description">{business.description}</p>
+
+                  {/* Stats */}
+                  <div className="business-card-stats">
+                    <div className="business-stat">
+                      <span className="stat-value">{formatCount(business.followers)}</span>
+                      <span className="stat-label">followers</span>
                     </div>
-                  )}
+                    <div className="business-stat">
+                      <span className="stat-value">{formatCount(business.pins)}</span>
+                      <span className="stat-label">pins</span>
+                    </div>
+                  </div>
+
+                  {/* Follow Button */}
+                  <button 
+                    className={`business-follow-btn ${business.isFollowing ? 'following' : ''}`}
+                    onClick={(e) => handleFollowToggle(business, e)}
+                  >
+                    {business.isFollowing ? (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        Following
+                      </>
+                    ) : (
+                      'Follow'
+                    )}
+                  </button>
                 </div>
               </div>
-
-              {/* Info Section */}
-              <div className="business-card-info">
-                <div className="business-card-name-row">
-                  <h3 className="business-card-name">{business.name}</h3>
-                </div>
-                <p className="business-card-username">@{business.username}</p>
-                <span className="business-card-category">{business.category}</span>
-                <p className="business-card-description">{business.description}</p>
-
-                {/* Stats */}
-                <div className="business-card-stats">
-                  <div className="business-stat">
-                    <span className="stat-value">{formatCount(business.followers)}</span>
-                    <span className="stat-label">followers</span>
-                  </div>
-                  <div className="business-stat">
-                    <span className="stat-value">{formatCount(business.pins)}</span>
-                    <span className="stat-label">pins</span>
-                  </div>
-                </div>
-
-                {/* Follow Button */}
-                <button 
-                  className={`business-follow-btn ${business.isFollowing ? 'following' : ''}`}
-                  onClick={(e) => handleFollowToggle(business.id, e)}
-                >
-                  {business.isFollowing ? (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                      </svg>
-                      Following
-                    </>
-                  ) : (
-                    'Follow'
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

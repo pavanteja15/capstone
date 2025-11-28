@@ -51,6 +51,21 @@
   white-space: nowrap;
 }
 
+/* Loading, Error, Empty States */
+.business-loading,
+.business-error,
+.business-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #767676;
+  font-size: 16px;
+}
+
+.business-error {
+  color: #cc0000;
+}
+
+
 .business-category-btn:hover {
   background: #e0e0e0;
 }

@@ -7,6 +7,13 @@ export interface SavedPinCard {
   title?: string;
   imageUrl?: string;
   description?: string;
+  // User info - nested user object from Pin entity
+  user?: {
+    id?: number;
+    name?: string;
+    fullname?: string;
+    profilePath?: string;
+  };
 }
 
 interface ShowSavedProps {
@@ -23,12 +30,12 @@ const ShowSaved: React.FC<ShowSavedProps> = ({ items = [], isLoading = false }) 
     navigate("/viewpin", {
       state: {
         pin: {
+          id: item.id,
           image: item.imageUrl ?? placeholderSaved,
           title: item.title ?? "Saved Pin",
           description: item.description ?? "Check out this saved pin!",
-          likes: Math.floor(Math.random() * 500) + 50,
-          userName: "",
-          userProfile: "/assets/images/profilepic1.jpg",
+          // Pass nested user object from saved Pin entity
+          user: item.user,
         },
       },
     });

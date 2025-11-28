@@ -110,6 +110,21 @@
   background: #f0f0f0;
 }
 
+.viewpin-icon-btn.liked {
+  color: #e60023;
+}
+
+.viewpin-icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.viewpin-icon-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .viewpin-icon-btn span {
   margin-left: 4px;
 }
@@ -179,6 +194,25 @@
   background: #ad081b;
 }
 
+.viewpin-save-btn.saved {
+  background: #111;
+}
+
+.viewpin-save-btn.saved:hover {
+  background: #333;
+}
+
+.viewpin-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.viewpin-save-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #ccc;
+}
+
 /* User Section */
 .viewpin-user-section {
   display: flex;
@@ -201,6 +235,23 @@
   color: #111;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Clickable user elements */
+.viewpin-user-avatar.clickable,
+.viewpin-username.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.viewpin-user-avatar.clickable:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.viewpin-username.clickable:hover {
+  color: #e60023;
+  text-decoration: underline;
 }
 
 /* Comments Section */
@@ -265,6 +316,14 @@
   color: #111;
 }
 
+.viewpin-related-loading,
+.viewpin-related-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #767676;
+  font-size: 16px;
+}
+
 .viewpin-related-grid {
   column-count: 5;
   column-gap: 16px;
@@ -323,6 +382,22 @@
 
 .viewpin-related-save:hover {
   background: #ad081b;
+}
+
+.viewpin-related-info {
+  padding: 8px 4px;
+}
+
+.viewpin-related-pin-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Responsive */

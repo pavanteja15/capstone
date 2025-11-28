@@ -9,6 +9,21 @@
   padding: 20px 40px;
 }
 
+.viewboard-error {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #ffe6e9;
+  border: 1px solid #ffccd5;
+  color: #b1001c;
+}
+
+.viewboard-loading {
+  margin: 0 0 16px;
+  color: #767676;
+  font-size: 14px;
+}
+
 /* Header */
 .viewboard-header {
   display: flex;
@@ -119,6 +134,14 @@
   height: auto;
   display: block;
   border-radius: 16px;
+}
+
+.viewboard-pin-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px;
+  object-fit: cover;
 }
 
 .viewboard-pin-overlay {
@@ -462,6 +485,24 @@
   background: #e0e0e0;
   color: #767676;
   cursor: not-allowed;
+}
+
+.collab-error {
+  color: #cc0000;
+  font-size: 13px;
+  margin: 4px 0 0 0;
+  padding: 8px 12px;
+  background: #ffe6e9;
+  border-radius: 8px;
+}
+
+.collab-success {
+  color: #0a7c42;
+  font-size: 13px;
+  margin: 4px 0 0 0;
+  padding: 8px 12px;
+  background: #e6f7ed;
+  border-radius: 8px;
 }
 
 /* Lists */

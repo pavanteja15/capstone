@@ -1,6 +1,7 @@
 
-import React, { FC, useState, useRef } from "react";
+import React, { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 
  
@@ -8,82 +9,88 @@ import { useNavigate } from "react-router-dom";
 import './home.css';
 
 import TopNav from "../components/global/TopNav";
+import { mapMediaPath } from "../utils/userMapper";
 
+const API_BASE_URL = "http://localhost:8765";
 
- 
+interface PinData {
+    id: number;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    videoUrl?: string;
+    userId?: number;
+    userName?: string;
+    userFullname?: string;
+    userProfilePath?: string;
+    boardId?: number;
+    boardTitle?: string;
+}
 
 interface MenuPosition {
     top: number;
     left: number;
 }
 
-const   Home: FC = ()=> {
+const Home: FC = () => {
 
     const navigate = useNavigate();
 
- 
-
-    const [selectedBoard,setSelectedBoard] = useState("All");
-
+    const [pins, setPins] = useState<PinData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [selectedBoard, setSelectedBoard] = useState("All");
     const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
     const [menuPosition, setMenuPosition] = useState<MenuPosition>({ top: 0, left: 0 });
 
+    // Fetch pins from API
+    useEffect(() => {
+        const fetchPins = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const response = await axios.get<PinData[]>(`${API_BASE_URL}/pins/feed`);
+                setPins(response.data || []);
+            } catch (err) {
+                console.error("Error fetching pins:", err);
+                setError("Failed to load pins");
+            } finally {
+                setLoading(false);
+            }
+        };
 
- 
+        fetchPins();
+    }, []);
 
-    const imagesTest = [
+    // Get unique board titles for filter
+    const boardTitles = Array.from(new Set(pins.filter(p => p.boardTitle).map(p => p.boardTitle!)));
+    const boards = ["All", ...boardTitles];
 
-        "/assets/images/one.jpg",
-
-        "/assets/images/eight.jpg",
-
-        "/assets/images/two.jpg",
-
-        "/assets/images/three.jpg",     
-
-        "/assets/images/eight.jpg",
-
-        "/assets/images/four.jpg",
-
-        "/assets/images/five.jpg",
-
-        "/assets/images/seven.jpg",
-
-    ]
-
-
- 
-
-    const images = [...imagesTest,...imagesTest,...imagesTest];
-
-
- 
-
-    const leftColImages = images.filter((_,index)=> index%2 === 0);
-
-    const rightColImages = images.filter((_,index)=> index%2 !== 0);
-
-
- 
-
-    const boardslist = ["Nature", "Space", "Anime"];
-
-    const boards = ["All", ...boardslist]
+    // Filter pins by selected board
+    const filteredPins = selectedBoard === "All" 
+        ? pins 
+        : pins.filter(p => p.boardTitle === selectedBoard);
 
     const handleBoardSelect = (board: string) => {
         setSelectedBoard(board);
     };
 
-    const handlePinClick = (imgSrc: string) => {
+    const handlePinClick = (pin: PinData) => {
+        const imageUrl = mapMediaPath(pin.imageUrl, API_BASE_URL) || 
+                         mapMediaPath(pin.videoUrl, API_BASE_URL) || 
+                         "/assets/images/one.jpg";
+        
         navigate("/viewpin", {
             state: {
                 pin: {
-                    image: imgSrc,
-                    title: "Beautiful Pin",
-                    description: "Discover amazing content on Pinterest.",
-                    likes: Math.floor(Math.random() * 500) + 50,
-                    userName: "Pinterest User",
-                    userProfile: "/assets/images/three.jpg"
+                    id: pin.id,
+                    image: imageUrl,
+                    title: pin.title || "Untitled Pin",
+                    description: pin.description || "Discover amazing content on Pinterest.",
+                    userId: pin.userId,
+                    userName: pin.userName,
+                    userFullname: pin.userFullname,
+                    userProfilePath: pin.userProfilePath,
                 }
             }
         });
@@ -96,25 +103,20 @@ const   Home: FC = ()=> {
         if (activeMenuIndex === index) {
             setActiveMenuIndex(null);
         } else {
-            // Get button position
             const button = e.currentTarget as HTMLButtonElement;
             const rect = button.getBoundingClientRect();
             
-            // Calculate position - show above the button if near bottom of screen
-            const menuHeight = 250; // approximate menu height
+            const menuHeight = 250;
             const spaceBelow = window.innerHeight - rect.bottom;
             
             let top: number;
             if (spaceBelow < menuHeight) {
-                // Not enough space below, show above
                 top = rect.top - menuHeight;
             } else {
-                // Show below the button
                 top = rect.bottom + 8;
             }
             
-            // Position to the left of the button
-            let left = rect.right - 280; // 280 is menu width
+            let left = rect.right - 280;
             if (left < 10) left = 10;
             
             setMenuPosition({ top, left });
@@ -124,6 +126,13 @@ const   Home: FC = ()=> {
 
     const handleMenuClose = () => {
         setActiveMenuIndex(null);
+    };
+
+    // Get display image for a pin
+    const getPinImage = (pin: PinData): string => {
+        return mapMediaPath(pin.imageUrl, API_BASE_URL) || 
+               mapMediaPath(pin.videoUrl, API_BASE_URL) || 
+               "/assets/images/one.jpg";
     };
 
 
@@ -194,31 +203,44 @@ const   Home: FC = ()=> {
                 </div>
             )}
 
-            <div className="home-masonry-container">
+            {/* Loading State */}
+            {loading && (
+                <div className="home-loading">
+                    <p>Loading pins...</p>
+                </div>
+            )}
 
-                {images.map((imgSrc,index)=>(
+            {/* Error State */}
+            {error && !loading && (
+                <div className="home-error">
+                    <p>{error}</p>
+                </div>
+            )}
 
-                        <div key={index} className="home-pin-card">
+            {/* Empty State */}
+            {!loading && !error && filteredPins.length === 0 && (
+                <div className="home-empty">
+                    <p>No pins available yet. Be the first to create one!</p>
+                </div>
+            )}
 
-                            <div className="home-pin-wrapper">
-
+            {/* Pins Grid */}
+            {!loading && !error && filteredPins.length > 0 && (
+                <div className="home-masonry-container">
+                    {filteredPins.map((pin, index) => (
+                        <div key={pin.id} className="home-pin-card">
+                            <div className="home-pin-wrapper" onClick={() => handlePinClick(pin)}>
                                 <img 
                                     className="home-pin-image"
-                                    src={imgSrc} 
-                                    alt={`Pin ${index + 1}`}
-                                    onClick={() => handlePinClick(imgSrc)}
+                                    src={getPinImage(pin)} 
+                                    alt={pin.title || `Pin ${index + 1}`}
                                 />
 
-
- 
-
                                 <div className="home-pin-overlay">
-
-                                    <button className="home-btn-save">Save</button>
+                                    <button className="home-btn-save" onClick={(e) => e.stopPropagation()}>Save</button>
 
                                     <div className="home-right-buttons">
-
-                                        <button className="home-btn-icon">
+                                        <button className="home-btn-icon" onClick={(e) => e.stopPropagation()}>
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M21 5V3h-2v2H5V3H3v2H1v2h2v12h8v2h-2v2h2v-2h4v2h2v-2h-2v-2h8V7h2V5h-2zM5 17V7h14v10H5z"/>
                                             </svg>
@@ -226,24 +248,26 @@ const   Home: FC = ()=> {
 
                                         <button 
                                             className="home-btn-icon"
-                                            onClick={(e) => handleMenuToggle(index, e)}
+                                            onClick={(e) => { e.stopPropagation(); handleMenuToggle(index, e); }}
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM3 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm18 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
                                             </svg>
                                         </button>
-
                                     </div>
-
                                 </div>
 
+                                {/* Pin Title Overlay */}
+                                {pin.title && (
+                                    <div className="home-pin-title-overlay">
+                                        <span className="home-pin-title">{pin.title}</span>
+                                    </div>
+                                )}
                             </div>
-
                         </div>
-
-                    ))}  
-
-            </div>
+                    ))}
+                </div>
+            )}
 
         </>
 

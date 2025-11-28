@@ -8,6 +8,18 @@ export interface PinCard {
   imageUrl?: string;
   description?: string;
   likes?: number;
+  // User info from backend PinViewDTO
+  userId?: number;
+  userName?: string;
+  userFullname?: string;
+  userProfilePath?: string;
+  // Or nested user object
+  user?: {
+    id?: number;
+    name?: string;
+    fullname?: string;
+    profilePath?: string;
+  };
 }
 
 interface ShowPinsProps {
@@ -33,12 +45,17 @@ const ShowPins: React.FC<ShowPinsProps> = ({ pins = [], isLoading = false, onCre
     navigate("/viewpin", {
       state: {
         pin: {
+          id: pin.id,
           image: pin.imageUrl ?? placeholderPin,
           title: pin.title ?? "Untitled Pin",
           description: pin.description ?? "Check out this pin!",
-          likes: pin.likes ?? Math.floor(Math.random() * 500) + 50,
-          userName: "",
-          userProfile: "/assets/images/profilepic1.jpg",
+          // Pass user info from backend (flat fields from PinViewDTO)
+          userId: pin.userId,
+          userName: pin.userName,
+          userFullname: pin.userFullname,
+          userProfilePath: pin.userProfilePath,
+          // Also pass nested user object if present
+          user: pin.user,
         },
       },
     });

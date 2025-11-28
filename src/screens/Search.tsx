@@ -142,10 +142,10 @@ const Search: React.FC = () => {
     navigate("/viewpin", {
       state: {
         pin: {
+          id: pin.id,
           image: pin.img,
           title: pin.title,
           description: "Check out this amazing pin!",
-          likes: Math.floor(Math.random() * 500) + 50,
           userName: pin.userName,
           userProfile: pin.userAvatar
         }

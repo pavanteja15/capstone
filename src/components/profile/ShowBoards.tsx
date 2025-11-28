@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import "./TabSection.css";
 
 export interface BoardCard {
@@ -8,6 +9,7 @@ export interface BoardCard {
   coverImageUrl?: string;
   description?: string;
   pinCount?: number;
+  ownerId?: number;
 }
 
 interface ShowBoardsProps {
@@ -26,6 +28,8 @@ const ShowBoards: React.FC<ShowBoardsProps> = ({
   onSelectBoard,
 }) => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state: any) => state.user);
+  const currentUserId = currentUser?.userId;
 
   const handleCreateBoard = () => {
     if (onCreateBoard) {
@@ -39,6 +43,7 @@ const ShowBoards: React.FC<ShowBoardsProps> = ({
     if (onSelectBoard) {
       onSelectBoard(board);
     }
+    const isOwner = board.ownerId ? board.ownerId === currentUserId : true;
     navigate("/viewboard", {
       state: {
         board: {
@@ -46,7 +51,10 @@ const ShowBoards: React.FC<ShowBoardsProps> = ({
           name: board.title,
           description: board.description,
           cover: board.coverImageUrl ?? placeholderCover,
+          ownerId: board.ownerId
         },
+        isOwner,
+        ownerId: board.ownerId
       },
     });
   };

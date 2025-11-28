@@ -247,13 +247,14 @@ const Sponsored: React.FC = () => {
   };
 
   const handlePinClick = (pin: SponsoredPin) => {
+    // Note: Sponsored pins are sample data - id is passed but may not exist in database
     navigate("/viewpin", {
       state: {
         pin: {
+          id: pin.id,
           image: pin.img,
           title: pin.title,
           description: pin.description,
-          likes: pin.saves,
           userName: pin.businessName,
           userProfile: pin.businessAvatar
         }

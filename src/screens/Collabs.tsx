@@ -1,19 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import axios from "axios";
 import SideNav from "../components/global/SideNav";
 import TopNav from "../components/global/TopNav";
 import CreateMenu from "../components/global/CreateMenu";
+import { mapMediaPath } from "../utils/userMapper";
 import "./Collabs.css";
+
+const API_BASE_URL = "http://localhost:8765";
+const PLACEHOLDER_AVATAR = "/assets/images/profilepic1.jpg";
+const PLACEHOLDER_BOARD = "/assets/images/nine.jpg";
 
 type CollabRequest = {
   id: number;
+  boardId: number;
   boardName: string;
   boardCover: string;
   senderName: string;
   senderEmail: string;
   senderAvatar: string;
   sentAt: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
 };
 
 type CollabBoard = {
@@ -23,84 +31,80 @@ type CollabBoard = {
   ownerName: string;
   ownerAvatar: string;
   pinCount: number;
-  role: 'collaborator' | 'owner';
+  ownerId: number;
 };
 
 const Collabs: React.FC = () => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<'requests' | 'boards'>('requests');
+  const [loading, setLoading] = useState(true);
+  
+  // Get current user from Redux
+  const user = useSelector((state: any) => state.user);
+  const currentUserId = user?.userId;
 
-  // Sample incoming requests
-  const [requests, setRequests] = useState<CollabRequest[]>([
-    {
-      id: 1,
-      boardName: "Travel Ideas",
-      boardCover: "/assets/images/nine.jpg",
-      senderName: "John Smith",
-      senderEmail: "john@example.com",
-      senderAvatar: "/assets/images/profilepic1.jpg",
-      sentAt: "2 hours ago",
-      status: 'pending'
-    },
-    {
-      id: 2,
-      boardName: "Recipe Collection",
-      boardCover: "/assets/images/eleven.jpg",
-      senderName: "Emily Davis",
-      senderEmail: "emily@example.com",
-      senderAvatar: "/assets/images/profilepic1.jpg",
-      sentAt: "1 day ago",
-      status: 'pending'
-    },
-    {
-      id: 3,
-      boardName: "Workout Plans",
-      boardCover: "/assets/images/twelve.jpg",
-      senderName: "Mike Wilson",
-      senderEmail: "mike@example.com",
-      senderAvatar: "/assets/images/profilepic1.jpg",
-      sentAt: "3 days ago",
-      status: 'pending'
-    },
-  ]);
+  // Incoming requests from API
+  const [requests, setRequests] = useState<CollabRequest[]>([]);
 
-  // Sample boards where user is a collaborator
-  const [collabBoards, setCollabBoards] = useState<CollabBoard[]>([
-    {
-      id: 1,
-      name: "Home Decor Ideas",
-      cover: "/assets/images/one.jpg",
-      ownerName: "Sarah Johnson",
-      ownerAvatar: "/assets/images/profilepic1.jpg",
-      pinCount: 42,
-      role: 'collaborator'
-    },
-    {
-      id: 2,
-      name: "Fashion Inspiration",
-      cover: "/assets/images/two.jpg",
-      ownerName: "Alex Chen",
-      ownerAvatar: "/assets/images/profilepic1.jpg",
-      pinCount: 28,
-      role: 'collaborator'
-    },
-    {
-      id: 3,
-      name: "DIY Projects",
-      cover: "/assets/images/three.jpg",
-      ownerName: "Lisa Brown",
-      ownerAvatar: "/assets/images/profilepic1.jpg",
-      pinCount: 15,
-      role: 'collaborator'
-    },
-  ]);
+  // Boards where user is a collaborator from API
+  const [collabBoards, setCollabBoards] = useState<CollabBoard[]>([]);
+
+  // Fetch received invitations
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    setLoading(true);
+    axios.get(`${API_BASE_URL}/api/invitations/${currentUserId}/received`)
+      .then(({ data }) => {
+        const pendingRequests = (data || [])
+          .filter((inv: any) => inv.status === 'PENDING')
+          .map((inv: any) => ({
+            id: inv.id,
+            boardId: inv.boardId,
+            boardName: inv.boardTitle || 'Untitled Board',
+            boardCover: mapMediaPath(inv.boardCoverUrl, API_BASE_URL) || PLACEHOLDER_BOARD,
+            senderName: inv.senderFullName || inv.senderName || 'Unknown',
+            senderEmail: inv.senderEmail || '',
+            senderAvatar: mapMediaPath(inv.senderAvatar, API_BASE_URL) || PLACEHOLDER_AVATAR,
+            sentAt: inv.sentAt || 'Recently',
+            status: inv.status
+          }));
+        setRequests(pendingRequests);
+      })
+      .catch(() => {
+        setRequests([]);
+      })
+      .finally(() => setLoading(false));
+  }, [currentUserId]);
+
+  // Fetch collab boards
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    axios.get(`${API_BASE_URL}/api/invitations/users/${currentUserId}/collab-boards`)
+      .then(({ data }) => {
+        const boards = (data || []).map((board: any) => ({
+          id: board.id,
+          name: board.title || 'Untitled Board',
+          cover: mapMediaPath(board.coverImageUrl, API_BASE_URL) || PLACEHOLDER_BOARD,
+          ownerName: board.ownerName || 'Unknown',
+          ownerAvatar: mapMediaPath(board.ownerAvatar, API_BASE_URL) || PLACEHOLDER_AVATAR,
+          pinCount: board.pinCount || 0,
+          ownerId: board.ownerId
+        }));
+        setCollabBoards(boards);
+      })
+      .catch(() => {
+        setCollabBoards([]);
+      });
+  }, [currentUserId]);
 
   const handleViewRequestBoard = (request: CollabRequest) => {
     navigate("/viewboard", {
       state: {
         board: {
-          id: request.id,
+          id: request.boardId,
           name: request.boardName,
           description: `Board by ${request.senderName}`,
           cover: request.boardCover
@@ -111,31 +115,60 @@ const Collabs: React.FC = () => {
     });
   };
 
-  const handleAcceptRequest = (id: number) => {
-    const request = requests.find(r => r.id === id);
-    if (request) {
-      // Add to collab boards
-      const newBoard: CollabBoard = {
-        id: Date.now(),
-        name: request.boardName,
-        cover: request.boardCover,
-        ownerName: request.senderName,
-        ownerAvatar: request.senderAvatar,
-        pinCount: 0,
-        role: 'collaborator'
-      };
-      setCollabBoards(prev => [...prev, newBoard]);
+  const handleAcceptRequest = async (id: number) => {
+    if (!currentUserId) return;
+    
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/invitations/${id}/respond?receiverId=${currentUserId}&accept=true`
+      );
+      
+      const request = requests.find(r => r.id === id);
+      if (request) {
+        // Add to collab boards
+        const newBoard: CollabBoard = {
+          id: request.boardId,
+          name: request.boardName,
+          cover: request.boardCover,
+          ownerName: request.senderName,
+          ownerAvatar: request.senderAvatar,
+          pinCount: 0,
+          ownerId: 0 // Will be fetched on next load
+        };
+        setCollabBoards(prev => [...prev, newBoard]);
+      }
+      
       // Remove from requests
       setRequests(prev => prev.filter(r => r.id !== id));
+    } catch (error) {
+      console.error('Failed to accept invitation:', error);
     }
   };
 
-  const handleDeclineRequest = (id: number) => {
-    setRequests(prev => prev.filter(r => r.id !== id));
+  const handleDeclineRequest = async (id: number) => {
+    if (!currentUserId) return;
+    
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/invitations/${id}/respond?receiverId=${currentUserId}&accept=false`
+      );
+      setRequests(prev => prev.filter(r => r.id !== id));
+    } catch (error) {
+      console.error('Failed to decline invitation:', error);
+    }
   };
 
-  const handleLeaveBoard = (id: number) => {
-    setCollabBoards(prev => prev.filter(b => b.id !== id));
+  const handleLeaveBoard = async (boardId: number) => {
+    if (!currentUserId) return;
+    
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/api/invitations/boards/${boardId}/collaborators/${currentUserId}?requesterId=${currentUserId}`
+      );
+      setCollabBoards(prev => prev.filter(b => b.id !== boardId));
+    } catch (error) {
+      console.error('Failed to leave board:', error);
+    }
   };
 
   const handleBoardClick = (board: CollabBoard) => {
@@ -145,13 +178,16 @@ const Collabs: React.FC = () => {
           id: board.id,
           name: board.name,
           description: `Collaborating with ${board.ownerName}`,
-          cover: board.cover
-        }
+          cover: board.cover,
+          ownerId: board.ownerId
+        },
+        isOwner: false,
+        ownerId: board.ownerId
       }
     });
   };
 
-  const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length;
 
   return (
     <div className="collabs-page">
@@ -186,7 +222,11 @@ const Collabs: React.FC = () => {
         {/* Requests Tab */}
         {activeTab === 'requests' && (
           <div className="collabs-requests-section">
-            {requests.length === 0 ? (
+            {loading ? (
+              <div className="collabs-empty">
+                <p>Loading requests...</p>
+              </div>
+            ) : requests.length === 0 ? (
               <div className="collabs-empty">
                 <div className="collabs-empty-icon">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="#767676">

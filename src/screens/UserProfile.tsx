@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +28,7 @@ const UserProfile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [openPopup, setOpenPopup] = useState(false);
   const [popupTitle, setPopupTitle] = useState("");
@@ -42,13 +43,74 @@ const UserProfile: React.FC = () => {
   const [following, setFollowing] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingPic, setUploadingPic] = useState(false);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  const profileImage = useMemo(
+    () => mapMediaPath(user.profilePath, API_BASE_URL) ?? FALLBACK_AVATAR,
+    [user.profilePath]
+  );
 
   const handlePopupOpen = useCallback((title: string, list: UserSummary[], type: "followers" | "following") => {
+    // Don't open popup if list is empty
+    if (list.length === 0) {
+      return;
+    }
     setPopupTitle(title);
     setPopupList(list);
     setPopupType(type);
     setOpenPopup(true);
   }, []);
+
+  // Unfollow a user (current user stops following targetUserId)
+  const handleUnfollow = useCallback(async (targetUserId: number) => {
+    if (!user.userId || actionLoading !== null) return;
+    
+    setActionLoading(targetUserId);
+    try {
+      await axios.delete(`${API_BASE_URL}/follow/${user.userId}/unfollow/${targetUserId}`);
+      
+      // Update following list
+      setFollowing(prev => prev.filter(u => u.id !== targetUserId));
+      setPopupList(prev => prev.filter(u => u.id !== targetUserId));
+      
+      // Close popup if list becomes empty
+      if (popupList.length <= 1) {
+        setOpenPopup(false);
+      }
+    } catch (err) {
+      console.error("Failed to unfollow user:", err);
+      setError("Failed to unfollow user. Please try again.");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [user.userId, actionLoading, popupList.length]);
+
+  // Remove a follower (make the follower unfollow current user)
+  const handleRemoveFollower = useCallback(async (followerUserId: number) => {
+    if (!user.userId || actionLoading !== null) return;
+    
+    setActionLoading(followerUserId);
+    try {
+      // To remove a follower, we need to make them unfollow us
+      // This requires the follower to unfollow the current user
+      await axios.delete(`${API_BASE_URL}/follow/${followerUserId}/unfollow/${user.userId}`);
+      
+      // Update followers list
+      setFollowers(prev => prev.filter(u => u.id !== followerUserId));
+      setPopupList(prev => prev.filter(u => u.id !== followerUserId));
+      
+      // Close popup if list becomes empty
+      if (popupList.length <= 1) {
+        setOpenPopup(false);
+      }
+    } catch (err) {
+      console.error("Failed to remove follower:", err);
+      setError("Failed to remove follower. Please try again.");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [user.userId, actionLoading, popupList.length]);
 
   const handleShareProfile = useCallback(() => {
     const url = window.location.href;
@@ -68,6 +130,67 @@ const UserProfile: React.FC = () => {
 
     alert(`Share this link: ${url}`);
   }, []);
+
+  const handleProfilePicClick = useCallback(() => {
+    if (profileImage === FALLBACK_AVATAR || !user.profilePath) {
+      // No profile picture, trigger file upload
+      fileInputRef.current?.click();
+    } else {
+      // Has profile picture, show enlarged popup
+      setOpenPicPopup(true);
+    }
+  }, [profileImage, user.profilePath]);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user.userId) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      return;
+    }
+
+    setUploadingPic(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post<string>(
+        `${API_BASE_URL}/auth/user/${user.userId}/profile-picture`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Update user state with new profile path
+      dispatch(setUser({
+        ...user,
+        profilePath: response.data,
+      }));
+
+    } catch (uploadError) {
+      console.error("Profile picture upload failed:", uploadError);
+      setError("Failed to upload profile picture. Please try again.");
+    } finally {
+      setUploadingPic(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [user, dispatch]);
 
   useEffect(() => {
     if (!user.userId) {
@@ -120,6 +243,7 @@ const UserProfile: React.FC = () => {
         const normalizedBoards = (boardRes.data ?? []).map((board: BoardCard) => ({
           ...board,
           coverImageUrl: mapMediaPath(board.coverImageUrl, API_BASE_URL) ?? FALLBACK_AVATAR,
+          ownerId: user.userId ?? undefined
         }));
 
         const normalizePins = (pinList: PinCard[]): PinCard[] =>
@@ -162,10 +286,6 @@ const UserProfile: React.FC = () => {
 
   const profileName = user.fullname || user.name || "Pinterest user";
   const username = user.name ? `@${user.name}` : "";
-  const profileImage = useMemo(
-    () => mapMediaPath(user.profilePath, API_BASE_URL) ?? FALLBACK_AVATAR,
-    [user.profilePath]
-  );
 
   const renderError = error ? <div className="profile-error">{error}</div> : null;
 
@@ -173,16 +293,39 @@ const UserProfile: React.FC = () => {
     <>
       <TopNav />
 
+      {/* Hidden file input for profile picture upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+
       <div className="profile-wrapper">
         <div className="center-content">
           {renderError}
 
-          <img
-            src={profileImage}
-            alt="Profile"
-            className="profile-pic"
-            onClick={() => setOpenPicPopup(true)}
-          />
+          <div className="profile-pic-container" onClick={handleProfilePicClick}>
+            <img
+              src={profileImage}
+              alt="Profile"
+              className={`profile-pic ${uploadingPic ? "uploading" : ""}`}
+            />
+            {profileImage === FALLBACK_AVATAR && !user.profilePath && (
+              <div className="profile-pic-overlay">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                <span>Add Photo</span>
+              </div>
+            )}
+            {uploadingPic && (
+              <div className="profile-pic-uploading">
+                <span>Uploading...</span>
+              </div>
+            )}
+          </div>
 
           <h2 className="profile-name">{profileName}</h2>
           {username && <p className="username">{username}</p>}
@@ -258,7 +401,7 @@ const UserProfile: React.FC = () => {
                     <li key={u.id}>
                       <div className="popup-user-info">
                         <img
-                          src={u.profilePicUrl ?? FALLBACK_AVATAR}
+                          src={mapMediaPath(u.profilePicUrl, API_BASE_URL) ?? FALLBACK_AVATAR}
                           alt={u.fullName || u.name}
                           className="popup-user-pic"
                         />
@@ -267,8 +410,15 @@ const UserProfile: React.FC = () => {
                           <div className="popup-user-bio">{u.bio || ""}</div>
                         </div>
                       </div>
-                      <button className="remove-btn">
-                        {popupType === "following" ? "Unfollow" : "Remove"}
+                      <button 
+                        className="remove-btn"
+                        disabled={actionLoading === u.id}
+                        onClick={() => popupType === "following" ? handleUnfollow(u.id) : handleRemoveFollower(u.id)}
+                      >
+                        {actionLoading === u.id 
+                          ? "..." 
+                          : popupType === "following" ? "Unfollow" : "Remove"
+                        }
                       </button>
                     </li>
                   ))}
@@ -282,6 +432,17 @@ const UserProfile: React.FC = () => {
           <div className="popup-overlay">
             <div className="popup-image-box">
               <img src={profileImage} alt="Enlarged" />
+              <div className="popup-image-actions">
+                <button
+                  className="change-pic-btn"
+                  onClick={() => {
+                    setOpenPicPopup(false);
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  Change Photo
+                </button>
+              </div>
               <button className="close-btn" onClick={() => setOpenPicPopup(false)}>
                 X
               </button>

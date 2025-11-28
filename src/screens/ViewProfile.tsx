@@ -1,21 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 import SideNav from "../components/global/SideNav";
 import TopNav from "../components/global/TopNav";
 import CreateMenu from "../components/global/CreateMenu";
+import { useAppSelector } from "../store/hooks";
+import { mapMediaPath } from "../utils/userMapper";
 import "./ViewProfile.css";
 
-type Pin = {
+const API_BASE_URL = "http://localhost:8765";
+
+type PinData = {
   id: number;
-  img: string;
-  title: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  userId?: number;
+  userName?: string;
+  userFullname?: string;
+  userProfilePath?: string;
+  boardId?: number;
+  boardTitle?: string;
 };
 
-type Board = {
+type BoardData = {
   id: number;
-  name: string;
-  cover: string;
+  title: string;
+  description?: string;
+  coverImageUrl?: string;
   pinCount: number;
+  ownerId: number;
+  isPrivate?: boolean;
 };
 
 type UserProfile = {
@@ -33,42 +49,98 @@ const ViewProfile: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
+  const [activeTab, setActiveTab] = useState<'created' | 'boards'>('created');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
-  // Get user from navigation state or use default
+  // Get current logged-in user from Redux
+  const currentUser = useAppSelector((state) => state.user);
+  const currentUserId = currentUser.userId;
+  
+  // Get user from navigation state
   const { user: passedUser } = location.state || {};
   
-  const [userProfile, setUserProfile] = useState<UserProfile>(passedUser || {
-    id: 1,
-    name: "Sophia Chen",
-    username: "sophiachen",
-    avatar: "/assets/images/profilepic1.jpg",
-    bio: "Digital artist & designer | Creating visual stories ✨ | Based in San Francisco",
-    followers: 12500,
-    following: 892,
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    id: passedUser?.id || 0,
+    name: passedUser?.name || "User",
+    username: passedUser?.username || "user",
+    avatar: passedUser?.avatar || "/assets/images/profilepic1.jpg",
+    bio: passedUser?.bio || "",
+    followers: 0,
+    following: 0,
     isFollowing: false
   });
 
-  // Sample boards
-  const userBoards: Board[] = [
-    { id: 1, name: "Travel Dreams", cover: "/assets/images/one.jpg", pinCount: 45 },
-    { id: 2, name: "Home Decor", cover: "/assets/images/two.jpg", pinCount: 32 },
-    { id: 3, name: "Fashion Inspo", cover: "/assets/images/three.jpg", pinCount: 28 },
-    { id: 4, name: "Art & Design", cover: "/assets/images/four.jpg", pinCount: 56 },
-    { id: 5, name: "Food & Recipes", cover: "/assets/images/five.jpg", pinCount: 19 },
-  ];
+  const [userPins, setUserPins] = useState<PinData[]>([]);
+  const [userBoards, setUserBoards] = useState<BoardData[]>([]);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
-  // Sample pins
-  const userPins: Pin[] = [
-    { id: 1, img: "/assets/images/one.jpg", title: "Sunset view" },
-    { id: 2, img: "/assets/images/two.jpg", title: "Modern interior" },
-    { id: 3, img: "/assets/images/three.jpg", title: "Street style" },
-    { id: 4, img: "/assets/images/four.jpg", title: "Abstract art" },
-    { id: 5, img: "/assets/images/five.jpg", title: "Delicious meal" },
-    { id: 6, img: "/assets/images/seven.jpg", title: "Nature" },
-    { id: 7, img: "/assets/images/eight.jpg", title: "Architecture" },
-    { id: 8, img: "/assets/images/nine.jpg", title: "Photography" },
-  ];
+  // Fetch user data, pins, boards, and follow status
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!passedUser?.id) {
+        setError("User not found");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        // Fetch user details
+        const userRes = await axios.get(`${API_BASE_URL}/auth/user/${passedUser.id}`);
+        const userData = userRes.data;
+
+        // Fetch followers count
+        const followersCountRes = await axios.get(`${API_BASE_URL}/follow/${passedUser.id}/followers/count`);
+        const followersCount = followersCountRes.data;
+
+        // Fetch following count
+        const followingCountRes = await axios.get(`${API_BASE_URL}/follow/${passedUser.id}/following/count`);
+        const followingCount = followingCountRes.data;
+
+        // Check if current user is following this user
+        let isFollowing = false;
+        if (currentUserId && currentUserId !== passedUser.id) {
+          try {
+            const isFollowingRes = await axios.get(`${API_BASE_URL}/follow/${currentUserId}/isfollowing/${passedUser.id}`);
+            isFollowing = isFollowingRes.data === true;
+          } catch (err) {
+            console.error("Error checking follow status:", err);
+          }
+        }
+
+        // Update user profile with fetched data
+        setUserProfile({
+          id: userData.userId || passedUser.id,
+          name: userData.fullname || userData.name || passedUser.name,
+          username: userData.name || passedUser.username,
+          avatar: mapMediaPath(userData.profilePath, API_BASE_URL) || passedUser.avatar || "/assets/images/profilepic1.jpg",
+          bio: userData.bio || userData.description || passedUser.bio || "",
+          followers: followersCount || 0,
+          following: followingCount || 0,
+          isFollowing: isFollowing
+        });
+
+        // Fetch public pins for this user
+        const pinsRes = await axios.get(`${API_BASE_URL}/pins/users/${passedUser.id}/pins/public`);
+        setUserPins(pinsRes.data || []);
+
+        // Fetch public boards for this user
+        const boardsRes = await axios.get(`${API_BASE_URL}/board/users/${passedUser.id}/boards/public`);
+        setUserBoards(boardsRes.data || []);
+
+      } catch (err) {
+        console.error("Error fetching profile data:", err);
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [passedUser?.id, currentUserId]);
 
   const formatCount = (count: number): string => {
     if (count >= 1000000) {
@@ -79,51 +151,128 @@ const ViewProfile: React.FC = () => {
     return count.toString();
   };
 
-  const handleFollowToggle = () => {
-    setUserProfile(prev => ({
-      ...prev,
-      isFollowing: !prev.isFollowing,
-      followers: prev.isFollowing ? prev.followers - 1 : prev.followers + 1
-    }));
+  const handleFollowToggle = async () => {
+    if (!currentUserId) {
+      alert("Please login to follow users");
+      navigate("/Register");
+      return;
+    }
+
+    if (currentUserId === userProfile.id) {
+      return; // Can't follow yourself
+    }
+
+    setIsFollowLoading(true);
+
+    try {
+      if (userProfile.isFollowing) {
+        // Unfollow
+        await axios.delete(`${API_BASE_URL}/follow/${currentUserId}/unfollow/${userProfile.id}`);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: false,
+          followers: prev.followers - 1
+        }));
+      } else {
+        // Follow
+        await axios.post(`${API_BASE_URL}/follow/${currentUserId}/follow/${userProfile.id}`);
+        setUserProfile(prev => ({
+          ...prev,
+          isFollowing: true,
+          followers: prev.followers + 1
+        }));
+      }
+    } catch (err) {
+      console.error("Error toggling follow:", err);
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleBoardClick = (board: Board) => {
+  const handleBoardClick = (board: BoardData) => {
     navigate("/viewboard", {
       state: {
         board: {
-          name: board.name,
-          cover: board.cover,
-          description: `${userProfile.name}'s ${board.name} collection`,
-          pins: []
+          id: board.id,
+          name: board.title,
+          cover: mapMediaPath(board.coverImageUrl, API_BASE_URL) || "/assets/images/one.jpg",
+          description: board.description || `${userProfile.name}'s ${board.title} collection`,
+          pins: [],
+          ownerId: userProfile.id
         },
-        isOwner: false
+        isOwner: false,
+        ownerId: userProfile.id
       }
     });
   };
 
-  const handlePinClick = (pin: Pin) => {
+  const handlePinClick = (pin: PinData) => {
+    const imageUrl = mapMediaPath(pin.imageUrl, API_BASE_URL) || 
+                     mapMediaPath(pin.videoUrl, API_BASE_URL) || 
+                     "/assets/images/one.jpg";
+    
     navigate("/viewpin", {
       state: {
         pin: {
-          image: pin.img,
-          title: pin.title,
-          description: "Check out this amazing pin!",
-          likes: Math.floor(Math.random() * 500) + 50,
-          userName: userProfile.name,
-          userProfile: userProfile.avatar
+          id: pin.id,
+          image: imageUrl,
+          title: pin.title || "Untitled Pin",
+          description: pin.description || "Check out this amazing pin!",
+          userId: userProfile.id,
+          userName: userProfile.username,
+          userFullname: userProfile.name,
+          userProfilePath: userProfile.avatar
         }
       }
     });
   };
 
   const handleMessage = () => {
-    // Navigate to messages or open chat
     console.log("Open message with", userProfile.name);
   };
+
+  const getPinImage = (pin: PinData): string => {
+    return mapMediaPath(pin.imageUrl, API_BASE_URL) || 
+           mapMediaPath(pin.videoUrl, API_BASE_URL) || 
+           "/assets/images/one.jpg";
+  };
+
+  const getBoardCover = (board: BoardData): string => {
+    return mapMediaPath(board.coverImageUrl, API_BASE_URL) || "/assets/images/one.jpg";
+  };
+
+  if (loading) {
+    return (
+      <div className="viewprofile-page">
+        <SideNav openCreateMenu={() => setShowMenu(true)} />
+        <TopNav />
+        <div className="viewprofile-content">
+          <div className="viewprofile-loading">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="viewprofile-page">
+        <SideNav openCreateMenu={() => setShowMenu(true)} />
+        <TopNav />
+        <div className="viewprofile-content">
+          <button className="viewprofile-back-btn" onClick={handleBack}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+          <div className="viewprofile-error">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="viewprofile-page">
@@ -174,17 +323,9 @@ const ViewProfile: React.FC = () => {
             <button 
               className={`viewprofile-follow-btn ${userProfile.isFollowing ? 'following' : ''}`}
               onClick={handleFollowToggle}
+              disabled={isFollowLoading}
             >
-              {userProfile.isFollowing ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                  Following
-                </>
-              ) : (
-                'Follow'
-              )}
+              {userProfile.isFollowing ? 'Unfollow' : 'Follow'}
             </button>
             <button className="viewprofile-message-btn" onClick={handleMessage}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -208,10 +349,10 @@ const ViewProfile: React.FC = () => {
             Created
           </button>
           <button 
-            className={`viewprofile-tab ${activeTab === 'saved' ? 'active' : ''}`}
-            onClick={() => setActiveTab('saved')}
+            className={`viewprofile-tab ${activeTab === 'boards' ? 'active' : ''}`}
+            onClick={() => setActiveTab('boards')}
           >
-            Saved
+            Boards
           </button>
         </div>
 
@@ -219,44 +360,59 @@ const ViewProfile: React.FC = () => {
         <div className="viewprofile-tab-content">
           {activeTab === 'created' && (
             <div className="viewprofile-pins-section">
-              <div className="viewprofile-pins-masonry">
-                {userPins.map(pin => (
-                  <div 
-                    key={pin.id} 
-                    className="viewprofile-pin-card"
-                    onClick={() => handlePinClick(pin)}
-                  >
-                    <img src={pin.img} alt={pin.title} className="viewprofile-pin-image" />
-                    <div className="viewprofile-pin-overlay">
-                      <button className="viewprofile-pin-save-btn" onClick={(e) => { e.stopPropagation(); }}>
-                        Save
-                      </button>
+              {userPins.length === 0 ? (
+                <div className="viewprofile-empty">
+                  <p>No public pins yet</p>
+                </div>
+              ) : (
+                <div className="viewprofile-pins-masonry">
+                  {userPins.map(pin => (
+                    <div 
+                      key={pin.id} 
+                      className="viewprofile-pin-card"
+                      onClick={() => handlePinClick(pin)}
+                    >
+                      <img src={getPinImage(pin)} alt={pin.title || "Pin"} className="viewprofile-pin-image" />
+                      <div className="viewprofile-pin-overlay">
+                        <button className="viewprofile-pin-save-btn" onClick={(e) => { e.stopPropagation(); }}>
+                          Save
+                        </button>
+                      </div>
+                      {pin.title && (
+                        <div className="viewprofile-pin-title">{pin.title}</div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === 'saved' && (
+          {activeTab === 'boards' && (
             <div className="viewprofile-boards-section">
-              <div className="viewprofile-boards-grid">
-                {userBoards.map(board => (
-                  <div 
-                    key={board.id} 
-                    className="viewprofile-board-card"
-                    onClick={() => handleBoardClick(board)}
-                  >
-                    <div className="viewprofile-board-cover">
-                      <img src={board.cover} alt={board.name} />
+              {userBoards.length === 0 ? (
+                <div className="viewprofile-empty">
+                  <p>No public boards yet</p>
+                </div>
+              ) : (
+                <div className="viewprofile-boards-grid">
+                  {userBoards.map(board => (
+                    <div 
+                      key={board.id} 
+                      className="viewprofile-board-card"
+                      onClick={() => handleBoardClick(board)}
+                    >
+                      <div className="viewprofile-board-cover">
+                        <img src={getBoardCover(board)} alt={board.title} />
+                      </div>
+                      <div className="viewprofile-board-info">
+                        <h3 className="viewprofile-board-name">{board.title}</h3>
+                        <span className="viewprofile-board-count">{board.pinCount} Pins</span>
+                      </div>
                     </div>
-                    <div className="viewprofile-board-info">
-                      <h3 className="viewprofile-board-name">{board.name}</h3>
-                      <span className="viewprofile-board-count">{board.pinCount} Pins</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
