@@ -1,9 +1,12 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import Validator from '../../Validator';
 import './SignupSection.css';
+import { useAppDispatch } from '../../store/hooks';
+import { setUser } from '../../store/userSlice';
 
-type AccountType = 'NORMAL' | 'BUSINESS';
+type AccountType = 'USER' | 'BUSINESS';
 type StepType = 'BASIC_INFO' | 'PROFILE_SECURITY' | 'BUSINESS';
 type FormMode = 'signup' | 'login';
 
@@ -22,6 +25,7 @@ interface UserState {
   accountType: AccountType;
   businessName?: string;
   websiteUrl?: string;
+  description?: string;
 }
 
 interface UserErrorState {
@@ -32,6 +36,21 @@ interface UserErrorState {
   fullNameError: string;
 }
 
+interface UserDtoResponse {
+  userId?: number;
+  name?: string;
+  email?: string;
+  password?: string;
+  fullname?: string;
+  mobile?: string;
+  bio?: string;
+  profilePath?: string;
+  accountType?: AccountType;
+  businessName?: string;
+  websiteUrl?: string;
+  description?: string;
+}
+
 const initialState: UserState = {
   email: '',
   userName: '',
@@ -40,9 +59,10 @@ const initialState: UserState = {
   fullName: '',
   mobile: '',
   bio: '',
-  accountType: 'NORMAL',
+  accountType: 'USER',
   businessName: '',
-  websiteUrl: ''
+  websiteUrl: '',
+  description: ''
 };
 
 const stepLabels: Record<StepType, string> = {
@@ -54,6 +74,8 @@ const stepLabels: Record<StepType, string> = {
 const baseSteps: StepType[] = ['BASIC_INFO', 'PROFILE_SECURITY'];
 
 const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' }) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [formMode, setFormMode] = useState<FormMode>(initialMode);
   const [state, setState] = useState<UserState>(initialState);
   const [loginEmail, setLoginEmail] = useState('');
@@ -73,6 +95,56 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
   const isBusinessFlow = state.accountType === 'BUSINESS';
   const steps = useMemo<StepType[]>(() => (isBusinessFlow ? [...baseSteps, 'BUSINESS'] : baseSteps), [isBusinessFlow]);
   const currentStepIndex = steps.indexOf(step);
+  const extractUserId = (message: string): number | null => {
+    const match = message?.match(/(\d+)/);
+    return match ? Number(match[1]) : null;
+  };
+
+  const normalizeAccountType = (value?: string): AccountType =>
+    value?.toUpperCase() === 'BUSINESS' ? 'BUSINESS' : 'USER';
+
+  const storeUserDetails = (userId: number, payload?: Partial<UserDtoResponse>) => {
+    if (!userId) {
+      return;
+    }
+
+    dispatch(
+      setUser({
+        userId,
+        name: payload?.name ?? '',
+        email: payload?.email ?? '',
+        password: payload?.password ?? '',
+        fullname: payload?.fullname ?? '',
+        mobile: payload?.mobile ?? '',
+        bio: payload?.bio ?? '',
+        profilePath: payload?.profilePath ?? '',
+        accountType: normalizeAccountType(payload?.accountType),
+        businessName: payload?.businessName ?? '',
+        websiteUrl: payload?.websiteUrl ?? '',
+        description: payload?.description ?? ''
+      })
+    );
+  };
+
+  const fetchAndStoreUserDetails = async (
+    userId: number | null,
+    fallback?: Partial<UserDtoResponse>
+  ) => {
+    if (!userId) {
+      return;
+    }
+
+    try {
+      const { data } = await axios.get<UserDtoResponse>(`http://localhost:8765/auth/user/${userId}`);
+      storeUserDetails(userId, { ...fallback, ...data, userId });
+    } catch (error) {
+      if (fallback) {
+        storeUserDetails(userId, { ...fallback, userId });
+      } else {
+        throw error;
+      }
+    }
+  };
 
   useEffect(() => {
     setFormMode(initialMode);
@@ -152,8 +224,8 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
     if (!isBusinessFlow) {
       return true;
     }
-    return Boolean(state.businessName?.trim() && state.websiteUrl?.trim());
-  }, [isBusinessFlow, state.businessName, state.websiteUrl]);
+    return Boolean(state.businessName?.trim() && state.websiteUrl?.trim() && state.description?.trim());
+  }, [isBusinessFlow, state.businessName, state.websiteUrl, state.description]);
 
   const isStepValid = (stepType: StepType) => {
     switch (stepType) {
@@ -172,26 +244,37 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
 
   const handleLoginSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    
+
     const emailValid = Validator.validateEmail(loginEmail);
     const passwordValid = loginPassword.length >= 6;
-    
+
     setLoginErrors({
       email: emailValid ? '' : 'Enter a valid email',
       password: passwordValid ? '' : 'Password must be at least 6 characters'
     });
-    
+
     if (!emailValid || !passwordValid) return;
-    
+
     try {
       setSubmitting(true);
-      // Replace with your actual login endpoint
-      await axios.post('http://localhost:8765/auth/login', {
+      const { data } = await axios.post<string>('http://localhost:8765/auth/loginuser', {
         email: loginEmail,
         password: loginPassword
       });
+
+      const userId = extractUserId(data);
+      if (!userId) {
+        throw new Error('Unable to read user id from login response');
+      }
+
+      dispatch(setUser({ userId }));
+      await fetchAndStoreUserDetails(userId, {
+        email: loginEmail,
+        password: loginPassword
+      });
+
       alert('Login successful!');
-      // Navigate to home or dashboard
+      navigate('/home');
     } catch (err) {
       alert('Login failed. Please check your credentials.');
     } finally {
@@ -222,10 +305,34 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
 
     try {
       setSubmitting(true);
-      await axios.post('http://localhost:8765/auth/registeruser', state);
+
+      const payload = {
+        name: state.userName,
+        email: state.email,
+        password: state.password,
+        fullname: state.fullName,
+        mobile: state.mobile,
+        bio: state.bio,
+        accountType: state.accountType,
+        businessName: state.businessName ?? '',
+        websiteUrl: state.websiteUrl ?? '',
+        description: state.description ?? ''
+      };
+
+      const { data } = await axios.post<string>('http://localhost:8765/auth/registeruser', payload);
+
+      const createdUserId = extractUserId(data);
+      if (!createdUserId) {
+        throw new Error('Unable to read user id from registration response');
+      }
+
+      dispatch(setUser({ userId: createdUserId }));
+      await fetchAndStoreUserDetails(createdUserId, payload);
+
       alert('Registered successfully');
       setState(initialState);
       setStep('BASIC_INFO');
+      navigate('/home');
     } catch (err) {
       alert('Failed to register');
     } finally {
@@ -421,7 +528,7 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
               <div className="form-group">
                 <label htmlFor="accountType">Account type</label>
                 <select id="accountType" name="accountType" value={state.accountType} onChange={handleChange}>
-                  <option value="NORMAL">Personal</option>
+                  <option value="USER">Personal</option>
                   <option value="BUSINESS">Business</option>
                 </select>
               </div>
@@ -505,6 +612,17 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
                   name="websiteUrl"
                   placeholder="https://your-company.com"
                   value={state.websiteUrl}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Business description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  placeholder="Describe your business"
+                  value={state.description}
                   onChange={handleChange}
                 />
               </div>

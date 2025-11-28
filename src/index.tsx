@@ -8,21 +8,10 @@ import App from './App';
 
 import reportWebVitals from './reportWebVitals';
 
-import RegisterUser from './RegisterUser';
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import CreatePin from './CreatePin';
-
-import UserProfile from './screens/UserProfile';
-
-import CreateBoardForm from './CreateBoardForm';
-
-import SelectBoard from './SelectBoard';
-
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-
-import Home from './screens/home';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 
 
@@ -37,13 +26,11 @@ const root = ReactDOM.createRoot(
 );
 
 root.render(
-
   <React.StrictMode>
-
-    <App/>
-
+    <Provider store={store}>
+      <App/>
+    </Provider>
   </React.StrictMode>
-
 );  
 
 // first comment

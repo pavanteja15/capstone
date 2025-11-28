@@ -1,20 +1,22 @@
-
-import React, { FC, useState, KeyboardEvent } from "react";
-
+import React, { FC, useEffect, useState, KeyboardEvent } from "react";
 import { Navbar, Form, FormControl, Dropdown, Image } from "react-bootstrap";
-
-import './topnav.css';
-
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
+import "./topnav.css";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { setUser } from "../../store/userSlice";
+import { mapMediaPath, normalizeUserPayload } from "../../utils/userMapper";
+import { UserResponse } from "../../types/user";
 
- 
+const API_BASE_URL = "http://localhost:8765";
 
-const TopNav :FC = ()=>{
-
-    const username = "gowrish varma"
-
-    const AccountType = "personal";
+const TopNav: FC = () => {
+    const user = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
+    const username = user.fullname || user.name || "";
+    const accountTypeLabel = user.accountType === 'BUSINESS' ? 'Business' : 'Personal';
+    const profileImage = mapMediaPath(user.profilePath, API_BASE_URL) ?? "/assets/images/profile.webp";
 
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -33,9 +35,24 @@ const TopNav :FC = ()=>{
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
+    useEffect(() => {
+        if (!user.userId || (user.fullname && user.name)) {
+            return;
+        }
 
+        const controller = new AbortController();
 
- 
+        axios
+            .get<UserResponse>(`${API_BASE_URL}/auth/user/${user.userId}`, { signal: controller.signal })
+            .then((res) => {
+                if (res.data) {
+                    dispatch(setUser(normalizeUserPayload(res.data, user)));
+                }
+            })
+            .catch(() => undefined);
+
+        return () => controller.abort();
+    }, [user.userId, user.fullname, user.name, dispatch]);
 
     return (
 
@@ -63,7 +80,7 @@ const TopNav :FC = ()=>{
 
                     <Dropdown.Toggle variant="light" id="topnav-dropdown" className="topnav-profile-toggle">
 
-                        <Image src="/assets/images/profile.webp" className="topnav-profile-img" />
+                        <Image src={profileImage} className="topnav-profile-img" />
 
                     </Dropdown.Toggle>
 
@@ -73,17 +90,17 @@ const TopNav :FC = ()=>{
 
                             <strong>{username}</strong>
 
-                            <div>{AccountType}</div>
+                            <div>{accountTypeLabel}</div>
 
                         </Dropdown.Header>
 
                             <Dropdown.Divider />
 
-                            <Dropdown.Item>Convert to bussiness</Dropdown.Item>
+                            <Dropdown.Item>Convert to business</Dropdown.Item>
 
                             <Dropdown.Divider />
 
-                            <Dropdown.Item>Convert to bussiness</Dropdown.Item>
+                            <Dropdown.Item>Settings</Dropdown.Item>
 
                         <Dropdown.Item>Log Out</Dropdown.Item>
 
