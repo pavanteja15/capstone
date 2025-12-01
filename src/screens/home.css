@@ -130,6 +130,13 @@
     cursor: pointer;
 }
 
+/* Video pins styling */
+.home-pin-video {
+    object-fit: cover;
+    min-height: 150px;
+    max-height: 400px;
+}
+
 .home-pin-wrapper:hover .home-pin-image {
     filter: brightness(0.85);
 }
@@ -173,6 +180,19 @@
 
 .home-btn-save:hover {
     background-color: #ad081b;
+}
+
+.home-btn-save.saved {
+    background-color: #111;
+}
+
+.home-btn-save.saved:hover {
+    background-color: #333;
+}
+
+.home-btn-save:disabled {
+    opacity: 0.8;
+    cursor: default;
 }
 
 /* Right Buttons Container */

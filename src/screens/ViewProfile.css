@@ -78,6 +78,52 @@
   max-width: 400px;
 }
 
+/* Business Info */
+.viewprofile-business-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.viewprofile-business-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0076d3, #00a5d3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewprofile-business-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+
+.viewprofile-website-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0076d3;
+  font-size: 14px;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f0f7ff;
+  transition: all 0.2s;
+}
+
+.viewprofile-website-link:hover {
+  background: #e0efff;
+  text-decoration: underline;
+}
+
 /* Stats */
 .viewprofile-stats {
   display: flex;

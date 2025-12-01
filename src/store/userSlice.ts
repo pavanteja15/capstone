@@ -7,7 +7,7 @@ export interface UserState {
   name: string;
   email: string;
   password: string;
-  fullname: string;
+  username: string;
   mobile: string;
   bio: string;
   profilePath: string;
@@ -23,7 +23,7 @@ const initialState: UserState = {
   name: '',
   email: '',
   password: '',
-  fullname: '',
+  username: '',
   mobile: '',
   bio: '',
   profilePath: '',

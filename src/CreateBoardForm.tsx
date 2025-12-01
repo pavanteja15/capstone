@@ -55,7 +55,7 @@ const CreateBoardForm: React.FC = () => {
             setDescription("");
             setCoverImage(null);
             setIsSecret(false);
-            navigate("/select-board");
+            navigate("/home");
         } catch (error) {
             setErrorMessage("Unable to create board. Please try again.");
         } finally {
@@ -66,7 +66,7 @@ const CreateBoardForm: React.FC = () => {
     return (
         <div className="cb-container">
             <div className="cb-top-bar">
-                <button className="cb-close-btn" onClick={() => navigate("/select-board")}>✕</button>
+                <button className="cb-close-btn" onClick={() => navigate("/home")}>✕</button>
 
                 <h2 className="cb-title">Create board</h2>
 
@@ -127,17 +127,6 @@ const CreateBoardForm: React.FC = () => {
                     </label>
                 </div>
                 <p className="toggle-description">Only you and collaborators will see this board</p>
-            </div>
-
-            <div className="cb-collab-row">
-                <div className="cb-collab-texts">
-                    <div className="cb-toggle-title">Collaborators</div>
-                    <div className="cb-toggle-sub">Invite collaborators to join</div>
-                </div>
-
-                <button className="cb-add-user-btn" type="button">
-                    👤➕
-                </button>
             </div>
         </div>
     );

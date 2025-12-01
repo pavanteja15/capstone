@@ -355,6 +355,17 @@
 
 }
 
+.popup-user-info.clickable {
+ cursor: pointer;
+ padding: 8px;
+ border-radius: 8px;
+ transition: background 0.2s;
+}
+
+.popup-user-info.clickable:hover {
+ background: #f0f0f0;
+}
+
 
  
 
@@ -984,6 +995,242 @@
 
  
 
+}
+
+/* Business Badge */
+.business-badge {
+  display: inline-block;
+  background: #0076d3;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* Business Details Section */
+.business-details {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f8f8;
+  border-radius: 12px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.business-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.business-website {
+  display: inline-block;
+  color: #0076d3;
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.business-website:hover {
+  text-decoration: underline;
+}
+
+.business-description {
+  font-size: 14px;
+  color: #666;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Profile Bio */
+.profile-bio {
+  color: #666;
+  font-size: 16px;
+  margin: 8px auto;
+  max-width: 500px;
+  line-height: 1.4;
+}
+
+/* Edit Profile Modal */
+.edit-profile-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.edit-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  color: #333;
+}
+
+.edit-form {
+  padding: 24px;
+}
+
+.edit-form-group {
+  margin-bottom: 20px;
+}
+
+.edit-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.edit-form-group input,
+.edit-form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.edit-form-group input:focus,
+.edit-form-group textarea:focus {
+  outline: none;
+  border-color: #0076d3;
+}
+
+.edit-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.business-section-divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0 20px;
+  color: #0076d3;
+}
+
+.business-section-divider::before,
+.business-section-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+}
+
+.business-section-divider span {
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.edit-form-info {
+  margin-top: 20px;
+  padding: 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+}
+
+.edit-form-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.edit-cancel-btn {
+  padding: 12px 24px;
+  background: #f1f1f1;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #333;
+}
+
+.edit-cancel-btn:hover {
+  background: #e5e5e5;
+}
+
+.edit-save-btn {
+  padding: 12px 24px;
+  background: #e60023;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+}
+
+.edit-save-btn:hover {
+  background: #ad081b;
+}
+
+.edit-save-btn:disabled,
+.edit-cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.edit-error {
+  background: #ffe0e0;
+  color: #c00;
+  padding: 12px;
+  margin: 0 24px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.profile-error {
+  background: #ffe0e0;
+  color: #c00;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.popup-list-scroll {
+  max-height: 350px;
+  overflow-y: auto;
 }
 
 

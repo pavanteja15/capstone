@@ -102,6 +102,23 @@
   margin: 0;
 }
 
+/* Error State */
+.search-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #ffe6e9;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.search-error p {
+  font-size: 16px;
+  color: #b1001c;
+  margin: 0;
+}
+
 /* Empty State */
 .search-empty {
   display: flex;
@@ -214,6 +231,13 @@
   font-size: 14px;
   color: #767676;
   margin: 0 0 4px 0;
+}
+
+.search-user-business {
+  font-size: 13px;
+  color: #e60023;
+  font-weight: 500;
+  margin: 0;
 }
 
 .search-user-followers {
@@ -347,6 +371,14 @@
   height: auto;
   display: block;
   border-radius: 16px 16px 0 0;
+}
+
+.search-pin-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px 16px 0 0;
+  object-fit: cover;
 }
 
 .search-pin-overlay {

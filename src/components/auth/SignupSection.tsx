@@ -5,6 +5,7 @@ import Validator from '../../Validator';
 import './SignupSection.css';
 import { useAppDispatch } from '../../store/hooks';
 import { setUser } from '../../store/userSlice';
+import { setToken, setStoredUser } from '../../utils/authUtils';
 
 type AccountType = 'USER' | 'BUSINESS';
 type StepType = 'BASIC_INFO' | 'PROFILE_SECURITY' | 'BUSINESS';
@@ -19,7 +20,6 @@ interface UserState {
   userName: string;
   password: string;
   conformPassword: string;
-  fullName: string;
   mobile: string;
   bio: string;
   accountType: AccountType;
@@ -33,7 +33,25 @@ interface UserErrorState {
   emailError: string;
   passwordError: string;
   mobileError: string;
-  fullNameError: string;
+}
+
+// Updated to match the new AuthResponseDTO from backend
+interface AuthResponse {
+  token: string;
+  userId: number;
+  name?: string;
+  email?: string;
+  username?: string;
+  mobile?: string;
+  bio?: string;
+  profilePath?: string;
+  accountType?: AccountType;
+  businessName?: string;
+  websiteUrl?: string;
+  description?: string;
+  message?: string;
+  errorCode?: string;
+  lockoutRemainingSeconds?: number;
 }
 
 interface UserDtoResponse {
@@ -41,7 +59,7 @@ interface UserDtoResponse {
   name?: string;
   email?: string;
   password?: string;
-  fullname?: string;
+  username?: string;
   mobile?: string;
   bio?: string;
   profilePath?: string;
@@ -56,7 +74,6 @@ const initialState: UserState = {
   userName: '',
   password: '',
   conformPassword: '',
-  fullName: '',
   mobile: '',
   bio: '',
   accountType: 'USER',
@@ -80,71 +97,44 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
   const [state, setState] = useState<UserState>(initialState);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginErrors, setLoginErrors] = useState({ email: '', password: '' });
+  const [loginErrors, setLoginErrors] = useState({ email: '', password: '', general: '' });
   const [formErrors, setFormErrors] = useState<UserErrorState>({
     userNameError: '',
     passwordError: '',
     emailError: '',
-    mobileError: '',
-    fullNameError: ''
+    mobileError: ''
   });
+  const [registerMessage, setRegisterMessage] = useState({ type: '', text: '' });
   const [passwordMatchError, setPasswordMatchError] = useState('');
   const [step, setStep] = useState<StepType>('BASIC_INFO');
   const [submitting, setSubmitting] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
 
   const isBusinessFlow = state.accountType === 'BUSINESS';
   const steps = useMemo<StepType[]>(() => (isBusinessFlow ? [...baseSteps, 'BUSINESS'] : baseSteps), [isBusinessFlow]);
   const currentStepIndex = steps.indexOf(step);
-  const extractUserId = (message: string): number | null => {
-    const match = message?.match(/(\d+)/);
-    return match ? Number(match[1]) : null;
-  };
 
   const normalizeAccountType = (value?: string): AccountType =>
     value?.toUpperCase() === 'BUSINESS' ? 'BUSINESS' : 'USER';
 
-  const storeUserDetails = (userId: number, payload?: Partial<UserDtoResponse>) => {
-    if (!userId) {
-      return;
+  // Lockout countdown timer
+  useEffect(() => {
+    if (lockoutSeconds > 0) {
+      const timer = setInterval(() => {
+        setLockoutSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
     }
-
-    dispatch(
-      setUser({
-        userId,
-        name: payload?.name ?? '',
-        email: payload?.email ?? '',
-        password: payload?.password ?? '',
-        fullname: payload?.fullname ?? '',
-        mobile: payload?.mobile ?? '',
-        bio: payload?.bio ?? '',
-        profilePath: payload?.profilePath ?? '',
-        accountType: normalizeAccountType(payload?.accountType),
-        businessName: payload?.businessName ?? '',
-        websiteUrl: payload?.websiteUrl ?? '',
-        description: payload?.description ?? ''
-      })
-    );
-  };
-
-  const fetchAndStoreUserDetails = async (
-    userId: number | null,
-    fallback?: Partial<UserDtoResponse>
-  ) => {
-    if (!userId) {
-      return;
-    }
-
-    try {
-      const { data } = await axios.get<UserDtoResponse>(`http://localhost:8765/auth/user/${userId}`);
-      storeUserDetails(userId, { ...fallback, ...data, userId });
-    } catch (error) {
-      if (fallback) {
-        storeUserDetails(userId, { ...fallback, userId });
-      } else {
-        throw error;
-      }
-    }
-  };
+  }, [lockoutSeconds]);
 
   useEffect(() => {
     setFormMode(initialMode);
@@ -177,6 +167,11 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
       setStep('BASIC_INFO');
     }
 
+    // Clear register message when user starts typing
+    if (registerMessage.text) {
+      setRegisterMessage({ type: '', text: '' });
+    }
+
     validateField(name, value);
   };
 
@@ -196,9 +191,6 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         case 'email':
           errors.emailError = Validator.validateEmail(value) ? '' : 'Enter a valid email';
           break;
-        case 'fullName':
-          errors.fullNameError = Validator.validateFullName(value) ? '' : 'Enter a valid name';
-          break;
         default:
           break;
       }
@@ -207,11 +199,10 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
   };
 
   const basicInfoValid = useMemo(() => {
-    const hasValues = state.email.trim() && state.userName.trim() && state.fullName.trim();
-    const hasErrors =
-      !!formErrors.emailError || !!formErrors.userNameError || !!formErrors.fullNameError;
+    const hasValues = state.email.trim() && state.userName.trim();
+    const hasErrors = !!formErrors.emailError || !!formErrors.userNameError;
     return Boolean(hasValues) && !hasErrors;
-  }, [state.email, state.userName, state.fullName, formErrors.emailError, formErrors.userNameError, formErrors.fullNameError]);
+  }, [state.email, state.userName, formErrors.emailError, formErrors.userNameError]);
 
   const profileSecurityValid = useMemo(() => {
     const hasValues = state.mobile.trim() && state.password.trim() && state.conformPassword.trim();
@@ -245,38 +236,116 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
   const handleLoginSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
+    // Clear previous errors
+    setLoginErrors({ email: '', password: '', general: '' });
+
     const emailValid = Validator.validateEmail(loginEmail);
     const passwordValid = loginPassword.length >= 6;
 
-    setLoginErrors({
-      email: emailValid ? '' : 'Enter a valid email',
-      password: passwordValid ? '' : 'Password must be at least 6 characters'
-    });
+    if (!emailValid || !passwordValid) {
+      setLoginErrors({
+        email: emailValid ? '' : 'Enter a valid email',
+        password: passwordValid ? '' : 'Password must be at least 6 characters',
+        general: ''
+      });
+      return;
+    }
 
-    if (!emailValid || !passwordValid) return;
+    // Check if locked out
+    if (lockoutSeconds > 0) {
+      setLoginErrors({
+        email: '',
+        password: '',
+        general: `Account is locked. Please try again in ${lockoutSeconds} seconds`
+      });
+      return;
+    }
 
     try {
       setSubmitting(true);
-      const { data } = await axios.post<string>('http://localhost:8765/auth/loginuser', {
+      const { data } = await axios.post<AuthResponse>('http://localhost:8765/auth/loginuser', {
         email: loginEmail,
         password: loginPassword
       });
 
-      const userId = extractUserId(data);
-      if (!userId) {
-        throw new Error('Unable to read user id from login response');
+      // Check for error responses
+      if (data.errorCode) {
+        switch (data.errorCode) {
+          case 'EMAIL_NOT_FOUND':
+            setLoginErrors({
+              email: 'No account found with this email address',
+              password: '',
+              general: ''
+            });
+            break;
+          case 'WRONG_PASSWORD':
+            setLoginErrors({
+              email: '',
+              password: data.message || 'Incorrect password',
+              general: ''
+            });
+            break;
+          case 'ACCOUNT_LOCKED':
+            if (data.lockoutRemainingSeconds) {
+              setLockoutSeconds(data.lockoutRemainingSeconds);
+            }
+            setLoginErrors({
+              email: '',
+              password: '',
+              general: data.message || 'Account is locked. Please try again later'
+            });
+            break;
+          default:
+            setLoginErrors({
+              email: '',
+              password: '',
+              general: data.message || 'Login failed'
+            });
+        }
+        return;
       }
 
-      dispatch(setUser({ userId }));
-      await fetchAndStoreUserDetails(userId, {
-        email: loginEmail,
-        password: loginPassword
+      // Successful login
+      if (data.token) {
+        setToken(data.token);
+      }
+
+      setStoredUser({
+        userId: data.userId,
+        name: data.name || '',
+        email: data.email || '',
+        username: data.username || '',
+        mobile: data.mobile || '',
+        bio: data.bio || '',
+        profilePath: data.profilePath || '',
+        accountType: data.accountType || 'USER',
+        businessName: data.businessName,
+        websiteUrl: data.websiteUrl,
+        description: data.description
       });
 
-      alert('Login successful!');
+      dispatch(setUser({
+        userId: data.userId,
+        name: data.name || '',
+        email: data.email || '',
+        password: loginPassword,
+        username: data.username || '',
+        mobile: data.mobile || '',
+        bio: data.bio || '',
+        profilePath: data.profilePath || '',
+        accountType: data.accountType || 'USER',
+        businessName: data.businessName || '',
+        websiteUrl: data.websiteUrl || '',
+        description: data.description || ''
+      }));
+
       navigate('/home');
     } catch (err) {
-      alert('Login failed. Please check your credentials.');
+      setLoginErrors({
+        email: '',
+        password: '',
+        general: 'Login failed. Please try again.'
+      });
     } finally {
       setSubmitting(false);
     }
@@ -284,6 +353,9 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+
+    // Clear previous messages
+    setRegisterMessage({ type: '', text: '' });
 
     if (!isStepValid(step)) {
       return;
@@ -310,7 +382,7 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         name: state.userName,
         email: state.email,
         password: state.password,
-        fullname: state.fullName,
+        username: state.userName,
         mobile: state.mobile,
         bio: state.bio,
         accountType: state.accountType,
@@ -319,22 +391,76 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         description: state.description ?? ''
       };
 
-      const { data } = await axios.post<string>('http://localhost:8765/auth/registeruser', payload);
+      const { data } = await axios.post<AuthResponse>('http://localhost:8765/auth/registeruser', payload);
 
-      const createdUserId = extractUserId(data);
-      if (!createdUserId) {
-        throw new Error('Unable to read user id from registration response');
+      // Check for error responses
+      if (data.errorCode) {
+        switch (data.errorCode) {
+          case 'EMAIL_EXISTS':
+            setFormErrors((prev) => ({
+              ...prev,
+              emailError: 'An account with this email already exists'
+            }));
+            setStep('BASIC_INFO');
+            setRegisterMessage({ type: 'error', text: data.message || 'Email already in use' });
+            break;
+          case 'USERNAME_EXISTS':
+            setFormErrors((prev) => ({
+              ...prev,
+              userNameError: 'This username is already taken'
+            }));
+            setStep('BASIC_INFO');
+            setRegisterMessage({ type: 'error', text: data.message || 'Username already taken' });
+            break;
+          default:
+            setRegisterMessage({ type: 'error', text: data.message || 'Registration failed' });
+        }
+        return;
       }
 
-      dispatch(setUser({ userId: createdUserId }));
-      await fetchAndStoreUserDetails(createdUserId, payload);
+      // Successful registration
+      if (data.token) {
+        setToken(data.token);
+      }
 
-      alert('Registered successfully');
+      setStoredUser({
+        userId: data.userId,
+        name: data.name || state.userName,
+        email: data.email || state.email,
+        username: data.username || state.userName,
+        mobile: data.mobile || state.mobile,
+        bio: data.bio || state.bio,
+        profilePath: data.profilePath || '',
+        accountType: data.accountType || state.accountType,
+        businessName: data.businessName || state.businessName,
+        websiteUrl: data.websiteUrl || state.websiteUrl,
+        description: data.description || state.description
+      });
+
+      dispatch(setUser({
+        userId: data.userId,
+        name: data.name || state.userName,
+        email: data.email || state.email,
+        password: state.password,
+        username: data.username || state.userName,
+        mobile: data.mobile || state.mobile,
+        bio: data.bio || state.bio,
+        profilePath: data.profilePath || '',
+        accountType: data.accountType || state.accountType,
+        businessName: data.businessName || state.businessName || '',
+        websiteUrl: data.websiteUrl || state.websiteUrl || '',
+        description: data.description || state.description || ''
+      }));
+
+      setRegisterMessage({ type: 'success', text: 'Registered successfully! Redirecting...' });
       setState(initialState);
       setStep('BASIC_INFO');
-      navigate('/home');
+      
+      setTimeout(() => {
+        navigate('/home');
+      }, 1000);
     } catch (err) {
-      alert('Failed to register');
+      setRegisterMessage({ type: 'error', text: 'Failed to register. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -419,6 +545,20 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         {formMode === 'login' ? (
           /* Login Form */
           <form className="signup-form" onSubmit={handleLoginSubmit}>
+            {/* General error message */}
+            {loginErrors.general && (
+              <div className="message-box error-message">
+                {loginErrors.general}
+              </div>
+            )}
+
+            {/* Lockout timer */}
+            {lockoutSeconds > 0 && (
+              <div className="message-box warning-message">
+                Account locked. Try again in {lockoutSeconds} seconds
+              </div>
+            )}
+
             <div className="form-group">
               <label htmlFor="loginEmail">Email</label>
               <input
@@ -427,28 +567,54 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
                 name="loginEmail"
                 placeholder="Email"
                 value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
+                onChange={(e) => {
+                  setLoginEmail(e.target.value);
+                  setLoginErrors((prev) => ({ ...prev, email: '', general: '' }));
+                }}
               />
               {loginErrors.email && <span className="error-text">{loginErrors.email}</span>}
             </div>
 
             <div className="form-group">
               <label htmlFor="loginPassword">Password</label>
-              <input
-                type="password"
-                id="loginPassword"
-                name="loginPassword"
-                placeholder="Password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showLoginPassword ? 'text' : 'password'}
+                  id="loginPassword"
+                  name="loginPassword"
+                  placeholder="Password"
+                  value={loginPassword}
+                  onChange={(e) => {
+                    setLoginPassword(e.target.value);
+                    setLoginErrors((prev) => ({ ...prev, password: '', general: '' }));
+                  }}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showLoginPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
               {loginErrors.password && <span className="error-text">{loginErrors.password}</span>}
             </div>
 
             <a href="#" className="forgot-password">Forgot your password?</a>
 
-            <button type="submit" className="btn-continue" disabled={submitting}>
-              {submitting ? 'Logging in...' : 'Log in'}
+            <button type="submit" className="btn-continue" disabled={submitting || lockoutSeconds > 0}>
+              {submitting ? 'Logging in...' : lockoutSeconds > 0 ? `Locked (${lockoutSeconds}s)` : 'Log in'}
             </button>
 
             <div className="divider">
@@ -476,6 +642,13 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         ) : (
           /* Signup Form */
           <form className="signup-form" onSubmit={handleSubmit}>
+          {/* Registration message */}
+          {registerMessage.text && (
+            <div className={`message-box ${registerMessage.type === 'success' ? 'success-message' : 'error-message'}`}>
+              {registerMessage.text}
+            </div>
+          )}
+
           <div className="signup-stepper">
             {steps.map((stepName: StepType) => (
               <span key={stepName} className={step === stepName ? 'active' : ''}>
@@ -510,19 +683,6 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
                   onChange={handleChange}
                 />
                 {formErrors.userNameError && <span className="error-text">{formErrors.userNameError}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="fullName">Full name</label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  placeholder="Enter your full name"
-                  value={state.fullName}
-                  onChange={handleChange}
-                />
-                {formErrors.fullNameError && <span className="error-text">{formErrors.fullNameError}</span>}
               </div>
 
               <div className="form-group">
@@ -563,28 +723,68 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
 
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Create a password"
-                  value={state.password}
-                  onChange={handleChange}
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    value={state.password}
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {formErrors.passwordError && <span className="error-text">{formErrors.passwordError}</span>}
                 <span className="password-hint">Use 8 or more letters, numbers and symbols</span>
               </div>
 
               <div className="form-group">
                 <label htmlFor="conformPassword">Confirm password</label>
-                <input
-                  type="password"
-                  id="conformPassword"
-                  name="conformPassword"
-                  placeholder="Re-enter your password"
-                  value={state.conformPassword}
-                  onChange={handleChange}
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="conformPassword"
+                    name="conformPassword"
+                    placeholder="Re-enter your password"
+                    value={state.conformPassword}
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {passwordMatchError && <span className="error-text">{passwordMatchError}</span>}
               </div>
             </>
@@ -665,19 +865,7 @@ const SignupSection: React.FC<SignupSectionProps> = ({ initialMode = 'signup' })
         </form>
         )}
 
-        <button
-          type="button"
-          className="btn-business"
-          onClick={() => {
-            setState((prev) => ({
-              ...prev,
-              accountType: 'BUSINESS'
-            }));
-            setStep('BASIC_INFO');
-          }}
-        >
-          Create a free business account
-        </button>
+        {/* Business account CTA removed per UI request */}
       </div>
     </section>
   );

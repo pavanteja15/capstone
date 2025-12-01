@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setUser, UserState } from "../store/userSlice";
 import { UserResponse } from "../types/user";
 import { mapMediaPath, normalizeUserPayload } from "../utils/userMapper";
+import { setStoredUser, getStoredUser } from "../utils/authUtils";
 
 const API_BASE_URL = "http://localhost:8765";
 const FALLBACK_AVATAR = "/assets/images/profilepic1.jpg";
@@ -45,6 +46,19 @@ const UserProfile: React.FC = () => {
   const [error, setError] = useState("");
   const [uploadingPic, setUploadingPic] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  
+  // Edit profile modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    bio: "",
+    mobile: "",
+    businessName: "",
+    websiteUrl: "",
+    description: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const profileImage = useMemo(
     () => mapMediaPath(user.profilePath, API_BASE_URL) ?? FALLBACK_AVATAR,
@@ -130,6 +144,86 @@ const UserProfile: React.FC = () => {
 
     alert(`Share this link: ${url}`);
   }, []);
+
+  // Open edit profile modal
+  const handleEditProfile = useCallback(() => {
+    setEditForm({
+      name: user.name || "",
+      bio: user.bio || "",
+      mobile: user.mobile || "",
+      businessName: user.businessName || "",
+      websiteUrl: user.websiteUrl || "",
+      description: user.description || "",
+    });
+    setEditError("");
+    setShowEditModal(true);
+  }, [user]);
+
+  // Save profile changes
+  const handleSaveProfile = useCallback(async () => {
+    if (!user.userId) return;
+    
+    setIsSaving(true);
+    setEditError("");
+
+    try {
+      const updateData: any = {
+        name: editForm.name.trim(),
+        bio: editForm.bio.trim(),
+        mobile: editForm.mobile.trim(),
+      };
+
+      // Include business fields if user is a business account
+      if (user.accountType === "BUSINESS") {
+        updateData.businessName = editForm.businessName.trim();
+        updateData.websiteUrl = editForm.websiteUrl.trim();
+        updateData.description = editForm.description.trim();
+      }
+
+      const response = await axios.put<UserResponse>(
+        `${API_BASE_URL}/auth/user/${user.userId}`,
+        updateData
+      );
+
+      // Update Redux store
+      const updatedUser = {
+        ...user,
+        name: updateData.name,
+        bio: updateData.bio,
+        mobile: updateData.mobile,
+        ...(user.accountType === "BUSINESS" && {
+          businessName: updateData.businessName,
+          websiteUrl: updateData.websiteUrl,
+          description: updateData.description,
+        }),
+      };
+      
+      dispatch(setUser(updatedUser));
+
+      // Update localStorage
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        setStoredUser({
+          ...storedUser,
+          name: updateData.name,
+          bio: updateData.bio,
+          mobile: updateData.mobile,
+          ...(user.accountType === "BUSINESS" && {
+            businessName: updateData.businessName,
+            websiteUrl: updateData.websiteUrl,
+            description: updateData.description,
+          }),
+        });
+      }
+
+      setShowEditModal(false);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      setEditError("Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, editForm, dispatch]);
 
   const handleProfilePicClick = useCallback(() => {
     if (profileImage === FALLBACK_AVATAR || !user.profilePath) {
@@ -284,7 +378,7 @@ const UserProfile: React.FC = () => {
     };
   }, [user.userId, dispatch, navigate]);
 
-  const profileName = user.fullname || user.name || "Pinterest user";
+  const profileName = user.username || user.name || "Pinterest user";
   const username = user.name ? `@${user.name}` : "";
 
   const renderError = error ? <div className="profile-error">{error}</div> : null;
@@ -327,9 +421,36 @@ const UserProfile: React.FC = () => {
             )}
           </div>
 
-          <h2 className="profile-name">{profileName}</h2>
+          <h2 className="profile-name">
+            {profileName}
+            {user.accountType === "BUSINESS" && (
+              <span className="business-badge">Business</span>
+            )}
+          </h2>
           {username && <p className="username">{username}</p>}
           {user.bio && <p className="profile-bio">{user.bio}</p>}
+
+          {/* Business Details Section */}
+          {user.accountType === "BUSINESS" && (
+            <div className="business-details">
+              {user.businessName && (
+                <p className="business-name">{user.businessName}</p>
+              )}
+              {user.websiteUrl && (
+                <a 
+                  href={user.websiteUrl.startsWith('http') ? user.websiteUrl : `https://${user.websiteUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="business-website"
+                >
+                  {user.websiteUrl}
+                </a>
+              )}
+              {user.description && (
+                <p className="business-description">{user.description}</p>
+              )}
+            </div>
+          )}
 
           <div className="follow-row">
             <span onClick={() => handlePopupOpen("Followers", followers, "followers")}>
@@ -342,7 +463,7 @@ const UserProfile: React.FC = () => {
           </div>
 
           <div className="profile-buttons">
-            <button className="profile-btn" onClick={() => navigate("/settings/profile")}>Edit profile</button>
+            <button className="profile-btn" onClick={handleEditProfile}>Edit profile</button>
             <button className="profile-btn" onClick={handleShareProfile}>Share</button>
           </div>
 
@@ -375,6 +496,15 @@ const UserProfile: React.FC = () => {
                 boards={boards}
                 isLoading={loading}
                 onCreateBoard={() => navigate("/create-board")}
+                onBoardUpdated={(updatedBoard) => {
+                  setBoards(prev => prev.map(b => 
+                    b.id === updatedBoard.id ? { ...b, ...updatedBoard } : b
+                  ));
+                }}
+                onBoardDeleted={(boardId) => {
+                  setBoards(prev => prev.filter(b => b.id !== boardId));
+                }}
+                isOwner={true}
               />
             )}
             {selectedTab === "pins" && (
@@ -382,6 +512,10 @@ const UserProfile: React.FC = () => {
                 pins={pins}
                 isLoading={loading}
                 onCreatePin={() => navigate("/create-pin")}
+                onPinDeleted={(pinId) => {
+                  setPins(prev => prev.filter(p => p.id !== pinId));
+                }}
+                isOwner={true}
               />
             )}
             {selectedTab === "saved" && <SavedList items={savedPins} isLoading={loading} />}
@@ -399,7 +533,26 @@ const UserProfile: React.FC = () => {
                 <ul>
                   {popupList.map((u) => (
                     <li key={u.id}>
-                      <div className="popup-user-info">
+                      <div 
+                        className="popup-user-info clickable"
+                        onClick={() => {
+                          setOpenPopup(false);
+                          navigate("/viewprofile", {
+                            state: {
+                              user: {
+                                id: u.id,
+                                name: u.fullName || u.name,
+                                username: u.name || "",
+                                avatar: mapMediaPath(u.profilePicUrl, API_BASE_URL) ?? FALLBACK_AVATAR,
+                                bio: u.bio || "",
+                                followers: 0,
+                                following: 0,
+                                isFollowing: popupType === "following"
+                              }
+                            }
+                          });
+                        }}
+                      >
                         <img
                           src={mapMediaPath(u.profilePicUrl, API_BASE_URL) ?? FALLBACK_AVATAR}
                           alt={u.fullName || u.name}
@@ -413,7 +566,10 @@ const UserProfile: React.FC = () => {
                       <button 
                         className="remove-btn"
                         disabled={actionLoading === u.id}
-                        onClick={() => popupType === "following" ? handleUnfollow(u.id) : handleRemoveFollower(u.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          popupType === "following" ? handleUnfollow(u.id) : handleRemoveFollower(u.id);
+                        }}
                       >
                         {actionLoading === u.id 
                           ? "..." 
@@ -446,6 +602,114 @@ const UserProfile: React.FC = () => {
               <button className="close-btn" onClick={() => setOpenPicPopup(false)}>
                 X
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Profile Modal */}
+        {showEditModal && (
+          <div className="popup-overlay">
+            <div className="edit-profile-modal">
+              <div className="edit-modal-header">
+                <h2>Edit profile</h2>
+                <button className="modal-close-btn" onClick={() => setShowEditModal(false)}>
+                  ×
+                </button>
+              </div>
+              
+              {editError && <div className="edit-error">{editError}</div>}
+              
+              <div className="edit-form">
+                <div className="edit-form-group">
+                  <label>Display name</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Your display name"
+                  />
+                </div>
+
+                <div className="edit-form-group">
+                  <label>Bio</label>
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                    placeholder="Tell others about yourself"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="edit-form-group">
+                  <label>Mobile</label>
+                  <input
+                    type="tel"
+                    value={editForm.mobile}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, mobile: e.target.value }))}
+                    placeholder="Your phone number"
+                  />
+                </div>
+
+                {/* Business fields - only shown for business accounts */}
+                {user.accountType === "BUSINESS" && (
+                  <>
+                    <div className="business-section-divider">
+                      <span>Business Details</span>
+                    </div>
+                    
+                    <div className="edit-form-group">
+                      <label>Business Name</label>
+                      <input
+                        type="text"
+                        value={editForm.businessName}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, businessName: e.target.value }))}
+                        placeholder="Your business name"
+                      />
+                    </div>
+
+                    <div className="edit-form-group">
+                      <label>Website URL</label>
+                      <input
+                        type="url"
+                        value={editForm.websiteUrl}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                        placeholder="https://yourbusiness.com"
+                      />
+                    </div>
+
+                    <div className="edit-form-group">
+                      <label>Business Description</label>
+                      <textarea
+                        value={editForm.description}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe your business"
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="edit-form-info">
+                  <p>Email and username cannot be changed</p>
+                </div>
+
+                <div className="edit-form-actions">
+                  <button 
+                    className="edit-cancel-btn"
+                    onClick={() => setShowEditModal(false)}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="edit-save-btn"
+                    onClick={handleSaveProfile}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

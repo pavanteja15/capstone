@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import SideNav from "../components/global/SideNav";
 import TopNav from "../components/global/TopNav";
@@ -43,11 +43,15 @@ type UserProfile = {
   followers: number;
   following: number;
   isFollowing: boolean;
+  accountType?: string;
+  businessName?: string;
+  websiteUrl?: string;
 };
 
 const ViewProfile: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { userId: routeUserId } = useParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<'created' | 'boards'>('created');
   const [loading, setLoading] = useState(true);
@@ -57,8 +61,9 @@ const ViewProfile: React.FC = () => {
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser.userId;
   
-  // Get user from navigation state
+  // Get user from navigation state or route parameter
   const { user: passedUser } = location.state || {};
+  const targetUserId = routeUserId ? parseInt(routeUserId) : passedUser?.id;
   
   const [userProfile, setUserProfile] = useState<UserProfile>({
     id: passedUser?.id || 0,
@@ -68,7 +73,10 @@ const ViewProfile: React.FC = () => {
     bio: passedUser?.bio || "",
     followers: 0,
     following: 0,
-    isFollowing: false
+    isFollowing: false,
+    accountType: passedUser?.accountType || "USER",
+    businessName: passedUser?.businessName || "",
+    websiteUrl: passedUser?.websiteUrl || ""
   });
 
   const [userPins, setUserPins] = useState<PinData[]>([]);
@@ -78,7 +86,7 @@ const ViewProfile: React.FC = () => {
   // Fetch user data, pins, boards, and follow status
   useEffect(() => {
     const fetchData = async () => {
-      if (!passedUser?.id) {
+      if (!targetUserId) {
         setError("User not found");
         setLoading(false);
         return;
@@ -89,22 +97,22 @@ const ViewProfile: React.FC = () => {
 
       try {
         // Fetch user details
-        const userRes = await axios.get(`${API_BASE_URL}/auth/user/${passedUser.id}`);
+        const userRes = await axios.get(`${API_BASE_URL}/auth/user/${targetUserId}`);
         const userData = userRes.data;
 
         // Fetch followers count
-        const followersCountRes = await axios.get(`${API_BASE_URL}/follow/${passedUser.id}/followers/count`);
+        const followersCountRes = await axios.get(`${API_BASE_URL}/follow/${targetUserId}/followers/count`);
         const followersCount = followersCountRes.data;
 
         // Fetch following count
-        const followingCountRes = await axios.get(`${API_BASE_URL}/follow/${passedUser.id}/following/count`);
+        const followingCountRes = await axios.get(`${API_BASE_URL}/follow/${targetUserId}/following/count`);
         const followingCount = followingCountRes.data;
 
         // Check if current user is following this user
         let isFollowing = false;
-        if (currentUserId && currentUserId !== passedUser.id) {
+        if (currentUserId && currentUserId !== targetUserId) {
           try {
-            const isFollowingRes = await axios.get(`${API_BASE_URL}/follow/${currentUserId}/isfollowing/${passedUser.id}`);
+            const isFollowingRes = await axios.get(`${API_BASE_URL}/follow/${currentUserId}/isfollowing/${targetUserId}`);
             isFollowing = isFollowingRes.data === true;
           } catch (err) {
             console.error("Error checking follow status:", err);
@@ -113,22 +121,25 @@ const ViewProfile: React.FC = () => {
 
         // Update user profile with fetched data
         setUserProfile({
-          id: userData.userId || passedUser.id,
-          name: userData.fullname || userData.name || passedUser.name,
-          username: userData.name || passedUser.username,
-          avatar: mapMediaPath(userData.profilePath, API_BASE_URL) || passedUser.avatar || "/assets/images/profilepic1.jpg",
-          bio: userData.bio || userData.description || passedUser.bio || "",
+          id: userData.userId || targetUserId,
+          name: userData.fullname || userData.name || passedUser?.name || "User",
+          username: userData.name || passedUser?.username || "user",
+          avatar: mapMediaPath(userData.profilePath, API_BASE_URL) || passedUser?.avatar || "/assets/images/profilepic1.jpg",
+          bio: userData.bio || userData.description || passedUser?.bio || "",
           followers: followersCount || 0,
           following: followingCount || 0,
-          isFollowing: isFollowing
+          isFollowing: isFollowing,
+          accountType: userData.accountType || passedUser?.accountType || "USER",
+          businessName: userData.businessProfile?.businessName || passedUser?.businessName || "",
+          websiteUrl: userData.businessProfile?.websiteUrl || passedUser?.websiteUrl || ""
         });
 
         // Fetch public pins for this user
-        const pinsRes = await axios.get(`${API_BASE_URL}/pins/users/${passedUser.id}/pins/public`);
+        const pinsRes = await axios.get(`${API_BASE_URL}/pins/users/${targetUserId}/pins/public`);
         setUserPins(pinsRes.data || []);
 
         // Fetch public boards for this user
-        const boardsRes = await axios.get(`${API_BASE_URL}/board/users/${passedUser.id}/boards/public`);
+        const boardsRes = await axios.get(`${API_BASE_URL}/board/users/${targetUserId}/boards/public`);
         setUserBoards(boardsRes.data || []);
 
       } catch (err) {
@@ -140,7 +151,7 @@ const ViewProfile: React.FC = () => {
     };
 
     fetchData();
-  }, [passedUser?.id, currentUserId]);
+  }, [targetUserId, currentUserId, passedUser]);
 
   const formatCount = (count: number): string => {
     if (count >= 1000000) {
@@ -300,6 +311,35 @@ const ViewProfile: React.FC = () => {
 
           <h1 className="viewprofile-name">{userProfile.name}</h1>
           <p className="viewprofile-username">@{userProfile.username}</p>
+          
+          {/* Business Badge and Name */}
+          {userProfile.accountType === 'BUSINESS' && (
+            <div className="viewprofile-business-info">
+              <span className="viewprofile-business-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+                </svg>
+                Business Account
+              </span>
+              {userProfile.businessName && (
+                <p className="viewprofile-business-name">{userProfile.businessName}</p>
+              )}
+              {userProfile.websiteUrl && (
+                <a 
+                  href={userProfile.websiteUrl.startsWith('http') ? userProfile.websiteUrl : `https://${userProfile.websiteUrl}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="viewprofile-website-link"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                  </svg>
+                  {userProfile.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              )}
+            </div>
+          )}
           
           {userProfile.bio && (
             <p className="viewprofile-bio">{userProfile.bio}</p>

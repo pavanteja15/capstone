@@ -39,6 +39,13 @@
   display: block;
 }
 
+/* Video styling */
+.viewpin-main-video {
+  object-fit: contain;
+  background: #000;
+  max-height: 600px;
+}
+
 .viewpin-image-actions {
   position: absolute;
   bottom: 16px;
@@ -254,6 +261,52 @@
   text-decoration: underline;
 }
 
+/* Pin Title and Description */
+.viewpin-content-section {
+  padding: 20px 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.viewpin-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+}
+
+.viewpin-description {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Board Section */
+.viewpin-board-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.viewpin-board-label {
+  font-size: 14px;
+  color: #767676;
+}
+
+.viewpin-board-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+}
+
+.viewpin-board-name:hover {
+  text-decoration: underline;
+}
+
 /* Comments Section */
 .viewpin-comments-section {
   flex: 1;
@@ -343,6 +396,13 @@
   display: block;
   border-radius: 16px;
   transition: filter 0.2s;
+}
+
+/* Related video pins */
+.viewpin-related-video {
+  object-fit: cover;
+  min-height: 120px;
+  max-height: 280px;
 }
 
 .viewpin-related-overlay {
@@ -457,4 +517,117 @@
   .viewpin-related-card {
     margin-bottom: 8px;
   }
+}
+
+/* Edit and Delete Buttons */
+.viewpin-edit-btn,
+.viewpin-delete-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.viewpin-edit-btn {
+  background: #efefef;
+  color: #333;
+}
+
+.viewpin-edit-btn:hover {
+  background: #dadada;
+}
+
+.viewpin-delete-btn {
+  background: #ffe6e6;
+  color: #cc0000;
+}
+
+.viewpin-delete-btn:hover {
+  background: #ffcccc;
+}
+
+/* Delete Modal */
+.viewpin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.viewpin-delete-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.viewpin-delete-modal h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+}
+
+.viewpin-delete-modal p {
+  color: #666;
+  font-size: 15px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.viewpin-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.viewpin-modal-cancel {
+  background: #efefef;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #111;
+  transition: background 0.2s;
+}
+
+.viewpin-modal-cancel:hover {
+  background: #dadada;
+}
+
+.viewpin-modal-delete {
+  background: #cc0000;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+  transition: background 0.2s;
+}
+
+.viewpin-modal-delete:hover {
+  background: #990000;
+}
+
+.viewpin-modal-delete:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }

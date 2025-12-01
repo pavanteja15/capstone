@@ -18,6 +18,7 @@ interface PinUser {
 interface PinData {
   id?: number;
   image: string;
+  videoUrl?: string;
   title: string;
   description: string;
   // Old format (from frontend navigation)
@@ -37,6 +38,7 @@ interface PinData {
 interface RelatedPin {
   id: number;
   imageUrl: string;
+  videoUrl?: string;
   title: string;
   description?: string;
   userId?: number;
@@ -121,6 +123,13 @@ const ViewPin: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [relatedPins, setRelatedPins] = useState<RelatedPin[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  
+  // Edit/Delete states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Check if current user is the pin owner
+  const isPinOwner = userId && pinOwnerId && userId === pinOwnerId;
 
   // Check if pin has a valid ID for like/save operations
   const hasPinId = Boolean(pin.id);
@@ -183,7 +192,8 @@ const ViewPin: React.FC = () => {
               .filter(p => p.id !== pin.id) // Exclude current pin
               .map(p => ({
                 ...p,
-                imageUrl: mapMediaPath(p.imageUrl, API_BASE_URL) || "/assets/images/one.jpg"
+                imageUrl: mapMediaPath(p.imageUrl, API_BASE_URL) || "/assets/images/one.jpg",
+                videoUrl: mapMediaPath(p.videoUrl, API_BASE_URL) || undefined
               }));
           } catch (err) {
             console.error("Error fetching board pins:", err);
@@ -199,7 +209,8 @@ const ViewPin: React.FC = () => {
             .filter(p => p.id !== pin.id && !boardPinIds.has(p.id)) // Exclude current pin and board pins
             .map(p => ({
               ...p,
-              imageUrl: mapMediaPath(p.imageUrl, API_BASE_URL) || "/assets/images/one.jpg"
+              imageUrl: mapMediaPath(p.imageUrl, API_BASE_URL) || "/assets/images/one.jpg",
+              videoUrl: mapMediaPath(p.videoUrl, API_BASE_URL) || undefined
             }));
         } catch (err) {
           console.error("Error fetching feed pins:", err);
@@ -228,26 +239,38 @@ const ViewPin: React.FC = () => {
       return;
     }
 
-    if (isLiking || liked) {
+    if (isLiking) {
       return;
     }
 
     setIsLiking(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/pins/like`, null, {
-        params: { userId, pinId: pin.id }
-      });
-      
-      // Check response message to confirm success
-      if (response.data === "Pin liked successfully") {
-        setLikeCount(prev => prev + 1);
-        setLiked(true);
+      if (liked) {
+        // Unlike the pin
+        const response = await axios.delete(`${API_BASE_URL}/api/pins/unlike`, {
+          params: { userId, pinId: pin.id }
+        });
+        
+        if (response.data === "Pin unliked successfully" || response.status === 200) {
+          setLikeCount(prev => Math.max(0, prev - 1));
+          setLiked(false);
+        }
       } else {
-        // Already liked message from backend
-        setLiked(true);
+        // Like the pin
+        const response = await axios.post(`${API_BASE_URL}/api/pins/like`, null, {
+          params: { userId, pinId: pin.id }
+        });
+        
+        if (response.data === "Pin liked successfully") {
+          setLikeCount(prev => prev + 1);
+          setLiked(true);
+        } else {
+          // Already liked message from backend
+          setLiked(true);
+        }
       }
     } catch (error: any) {
-      console.error("Error liking pin:", error);
+      console.error("Error toggling like:", error);
     } finally {
       setIsLiking(false);
     }
@@ -286,12 +309,48 @@ const ViewPin: React.FC = () => {
     }
   };
 
+  // Edit Pin Handler - Navigate to CreatePin with pin data
+  const handleEditPin = () => {
+    navigate("/create-pin", {
+      state: {
+        pinId: pin.id,
+        pin: {
+          id: pin.id,
+          title: pin.title,
+          description: pin.description,
+          imageUrl: pin.image,
+          videoUrl: pin.videoUrl,
+          boardId: pin.boardId
+        }
+      }
+    });
+  };
+
+  // Delete Pin Handler
+  const handleDeletePin = async () => {
+    if (!pin.id) return;
+    
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/pins/${pin.id}`);
+      // Navigate back after successful deletion
+      navigate(-1);
+    } catch (error: any) {
+      console.error("Error deleting pin:", error);
+      alert("Failed to delete pin. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const handlePinClick = (relatedPin: RelatedPin) => {
     navigate("/viewpin", {
       state: {
         pin: {
           id: relatedPin.id,
           image: relatedPin.imageUrl,
+          videoUrl: relatedPin.videoUrl,
           title: relatedPin.title || "Related Pin",
           description: relatedPin.description || "Discover more amazing content like this.",
           userId: relatedPin.userId,
@@ -311,9 +370,31 @@ const ViewPin: React.FC = () => {
       <div className="viewpin-container">
         {/* Main Pin Card */}
         <div className="viewpin-card">
-          {/* Left - Pin Image */}
+          {/* Left - Pin Image/Video */}
           <div className="viewpin-image-section">
-            <img src={pin.image} alt={pin.title} className="viewpin-main-image" />
+            {pin.videoUrl ? (
+              <video 
+                src={mapMediaPath(pin.videoUrl, API_BASE_URL) || pin.videoUrl} 
+                className="viewpin-main-image viewpin-main-video" 
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <img 
+                src={mapMediaPath(pin.image, API_BASE_URL) || pin.image} 
+                alt={pin.title} 
+                className="viewpin-main-image"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== "/assets/images/one.jpg") {
+                    target.src = "/assets/images/one.jpg";
+                  }
+                }}
+              />
+            )}
             <div className="viewpin-image-actions">
               <button className="viewpin-expand-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
@@ -347,6 +428,28 @@ const ViewPin: React.FC = () => {
               </div>
 
               <div className="viewpin-right-actions">
+                {isPinOwner && (
+                  <>
+                    <button 
+                      className="viewpin-edit-btn"
+                      onClick={handleEditPin}
+                      title="Edit pin"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      </svg>
+                    </button>
+                    <button 
+                      className="viewpin-delete-btn"
+                      onClick={() => setShowDeleteModal(true)}
+                      title="Delete pin"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                      </svg>
+                    </button>
+                  </>
+                )}
                 <button 
                   className={`viewpin-save-btn ${saved ? 'saved' : ''} ${!hasPinId ? 'disabled' : ''}`}
                   onClick={handleSave}
@@ -373,6 +476,24 @@ const ViewPin: React.FC = () => {
                 {pinOwnerName}
               </span>
             </div>
+
+            {/* Pin Title and Description */}
+            <div className="viewpin-content-section">
+              {pin.title && (
+                <h1 className="viewpin-title">{pin.title}</h1>
+              )}
+              {pin.description && (
+                <p className="viewpin-description">{pin.description}</p>
+              )}
+            </div>
+
+            {/* Board Info */}
+            {pin.boardTitle && (
+              <div className="viewpin-board-section">
+                <span className="viewpin-board-label">Saved to</span>
+                <span className="viewpin-board-name">{pin.boardTitle}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -391,7 +512,29 @@ const ViewPin: React.FC = () => {
                   className="viewpin-related-card"
                   onClick={() => handlePinClick(relatedPin)}
                 >
-                  <img src={relatedPin.imageUrl} alt={relatedPin.title || "Related pin"} className="viewpin-related-image" />
+                  {relatedPin.videoUrl ? (
+                    <video 
+                      src={relatedPin.videoUrl} 
+                      className="viewpin-related-image viewpin-related-video"
+                      muted
+                      loop
+                      playsInline
+                      onMouseEnter={(e) => e.currentTarget.play()}
+                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                    />
+                  ) : (
+                    <img 
+                      src={relatedPin.imageUrl} 
+                      alt={relatedPin.title || "Related pin"} 
+                      className="viewpin-related-image"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== "/assets/images/one.jpg") {
+                          target.src = "/assets/images/one.jpg";
+                        }
+                      }}
+                    />
+                  )}
                   <div className="viewpin-related-overlay">
                     <button className="viewpin-related-save">Save</button>
                   </div>
@@ -406,6 +549,22 @@ const ViewPin: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Pin Modal */}
+      {showDeleteModal && (
+        <div className="viewpin-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="viewpin-delete-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Delete Pin?</h2>
+            <p>This will permanently delete this pin. This action cannot be undone.</p>
+            <div className="viewpin-modal-actions">
+              <button className="viewpin-modal-cancel" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="viewpin-modal-delete" onClick={handleDeletePin} disabled={isDeleting}>
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,13 +8,13 @@ export const normalizeUserPayload = (
   data: UserResponse | null | undefined,
   fallback: UserState
 ): Partial<UserState> => {
-  const fallbackFullName = fallback.fullname || fallback.name || "";
-  const apiFullName = data?.fullname ?? (data as any)?.fullName ?? data?.name;
+  const fallbackUsername = fallback.username || fallback.name || "";
+  const apiUsername = data?.username ?? (data as any)?.name ?? data?.name;
 
   return {
     userId: data?.userId ?? fallback.userId,
-    name: data?.name ?? fallback.name ?? apiFullName ?? fallbackFullName,
-    fullname: apiFullName ?? fallbackFullName,
+    name: data?.name ?? fallback.name ?? apiUsername ?? fallbackUsername,
+    username: apiUsername ?? fallbackUsername,
     email: data?.email ?? fallback.email,
     mobile: data?.mobile ?? fallback.mobile,
     bio: data?.bio ?? data?.description ?? fallback.bio,

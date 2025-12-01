@@ -1,18 +1,48 @@
 
 /* Explore/Category Component Styles - Scoped to prevent leaking */
 
+.explore-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.explore-clear-filter-btn {
+    background: #e60023;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.explore-clear-filter-btn:hover {
+    background: #ad081b;
+}
+
 .explore-category-card {
-    height: 150px;
+    height: 120px;
     border-radius: 14px;
     background-size: cover;
     background-position: center;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .explore-category-card:hover {
     transform: scale(1.03);
+}
+
+.explore-category-card.selected {
+    box-shadow: 0 0 0 3px #e60023;
+    transform: scale(1.02);
 }
 
 .explore-category-card .explore-category-overlay {
@@ -20,6 +50,11 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.25);
     border-radius: 14px;
+    transition: background 0.2s;
+}
+
+.explore-category-card.selected .explore-category-overlay {
+    background: rgba(230, 0, 35, 0.3);
 }
 
 .explore-category-card .explore-category-title {
@@ -28,6 +63,23 @@
     left: 12px;
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
     margin: 0;
+    font-size: 14px;
+}
+
+.explore-category-selected-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #e60023;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 /* ========================================= */
@@ -163,6 +215,19 @@
     background-color: #ad081b;
 }
 
+.explore-btn-save.saved {
+    background-color: #111;
+}
+
+.explore-btn-save.saved:hover {
+    background-color: #333;
+}
+
+.explore-btn-save:disabled {
+    opacity: 0.8;
+    cursor: default;
+}
+
 /* Right Buttons Container */
 .explore-right-buttons {
     width: 100%;
@@ -260,4 +325,31 @@ svg.explore-pin-menu-icon {
     height: 24px;
     flex-shrink: 0;
     color: #111;
+}
+
+/* No Pins Message */
+.explore-no-pins {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.explore-no-pins p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+/* Pin Info */
+.explore-pin-info {
+    padding: 8px 4px;
+}
+
+.explore-pin-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

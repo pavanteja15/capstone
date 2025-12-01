@@ -34,7 +34,6 @@ type MediaKind = "image" | "video";
 const API_BASE_URL = "http://localhost:8765";
 const PLACEHOLDER_BOARD = "/assets/images/nine.jpg";
 const PLACEHOLDER_PIN = "/assets/images/one.jpg";
-const TOPIC_OPTIONS: string[] = ["Travel", "Food", "Fitness", "Technology", "Fashion", "Photography", "DIY", "Motivation"];
 
 const sanitizeList = (value?: string | null) => {
 	if (!value) {
@@ -75,12 +74,12 @@ const CreatePin: React.FC = () => {
 		sourceUrl: "",
 		attribution: "",
 	});
-	const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+	const [categories, setCategories] = useState<string[]>([]);
+	const [selectedTopic, setSelectedTopic] = useState<string>("");
 	const [keywords, setKeywords] = useState<string[]>([]);
 	const [keywordText, setKeywordText] = useState("");
 	const [productTags, setProductTags] = useState<string[]>([]);
 	const [productText, setProductText] = useState("");
-	const [showTopics, setShowTopics] = useState(false);
 	const [showProducts, setShowProducts] = useState(false);
 	const [showKeywords, setShowKeywords] = useState(false);
 
@@ -103,7 +102,8 @@ const CreatePin: React.FC = () => {
 			sourceUrl: pin.sourceUrl ?? "",
 			attribution: pin.attribution ?? "",
 		});
-		setSelectedTopics(sanitizeList(pin.topics));
+		const topicsList = sanitizeList(pin.topics);
+		setSelectedTopic(topicsList.length > 0 ? topicsList[0] : "");
 		setKeywords(sanitizeList(pin.keywords));
 		setProductTags(sanitizeList(pin.productTags));
 		setIsPrivate(Boolean(pin.isPrivate));
@@ -172,7 +172,22 @@ const CreatePin: React.FC = () => {
 			}
 		};
 
+		const fetchCategories = async () => {
+			try {
+				const { data } = await axios.get<string[]>(`${API_BASE_URL}/categories`);
+				setCategories(data ?? []);
+			} catch (error) {
+				// fallback categories if API fails - includes all 18 categories
+				setCategories([
+					"Travel", "Food", "Fitness", "Technology", "Fashion", "Photography", 
+					"DIY", "Motivation", "Art", "Music", "Gaming", "Beauty", 
+					"Home Decor", "Nature", "Sports", "Education", "Lifestyle", "Business"
+				]);
+			}
+		};
+
 		fetchBoards();
+		fetchCategories();
 		refreshDrafts();
 	}, [refreshDrafts, userId]);
 
@@ -260,10 +275,8 @@ const CreatePin: React.FC = () => {
 		setShowBoardPicker(false);
 	};
 
-	const toggleTopic = (topic: string) => {
-		setSelectedTopics((prev) =>
-			prev.includes(topic) ? prev.filter((item) => item !== topic) : [...prev, topic]
-		);
+	const handleTopicChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedTopic(event.target.value);
 	};
 
 	const addKeyword = () => {
@@ -302,7 +315,7 @@ const CreatePin: React.FC = () => {
 		setMediaFile(null);
 		setMediaUrlInput("");
 		setMediaPreview(null);
-		setSelectedTopics([]);
+		setSelectedTopic("");
 		setKeywords([]);
 		setProductTags([]);
 		setKeywordText("");
@@ -324,7 +337,7 @@ const CreatePin: React.FC = () => {
 			sourceUrl: formData.sourceUrl.trim(),
 			attribution: formData.attribution.trim(),
 			keywords: keywords.join(","),
-			topics: selectedTopics.join(","),
+			topics: selectedTopic,
 			productTags: productTags.join(","),
 			isPrivate,
 			mediaType: mediaKind,
@@ -673,20 +686,21 @@ const CreatePin: React.FC = () => {
 							</div>
 						)}
 
-						<div className="section-row" onClick={() => setShowTopics((prev) => !prev)}>
-							<span>Tag related topics</span>
-							<span className="right" />
-						</div>
-
-						{showTopics && (
-							<div className="topics-dropdown">
-								{TOPIC_OPTIONS.map((topic) => (
-									<div key={topic} className={`topic-option ${selectedTopics.includes(topic) ? "selected" : ""}`} onClick={() => toggleTopic(topic)}>
-										{topic}
-									</div>
+						<div className="input-box">
+							<label>Tag related topic</label>
+							<select
+								className="topic-dropdown"
+								value={selectedTopic}
+								onChange={handleTopicChange}
+							>
+								<option value="">Select a category</option>
+								{categories.map((category) => (
+									<option key={category} value={category}>
+										{category}
+									</option>
 								))}
-							</div>
-						)}
+							</select>
+						</div>
 
 						<div className="section-row" onClick={() => setShowProducts((prev) => !prev)}>
 							<span>Tag products</span>
@@ -768,9 +782,9 @@ const CreatePin: React.FC = () => {
 								</div>
 							)}
 							<div className="preview-meta">
-								{selectedTopics.length > 0 && (
+								{selectedTopic && (
 									<p>
-										<strong>Topics:</strong> {selectedTopics.join(", ")}
+										<strong>Topic:</strong> {selectedTopic}
 									</p>
 								)}
 								{keywords.length > 0 && (

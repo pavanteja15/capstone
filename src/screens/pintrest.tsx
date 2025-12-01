@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './pintrest.css';
 import SignupSection from '../components/auth/SignupSection';
+import { isAuthenticated, getStoredUser } from '../utils/authUtils';
+import { useAppDispatch } from '../store/hooks';
+import { setUser } from '../store/userSlice';
 
 type AuthMode = 'signup' | 'login';
 
@@ -58,6 +62,19 @@ const slides: SlideData[] = [
 const PinterestHero: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [authMode, setAuthMode] = useState<AuthMode>('signup');
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  // Check for existing authentication and auto-redirect
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        dispatch(setUser(storedUser));
+        navigate('/home');
+      }
+    }
+  }, [navigate, dispatch]);
 
   const scrollToAuth = (mode: AuthMode) => {
     setAuthMode(mode);

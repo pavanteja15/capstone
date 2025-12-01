@@ -81,8 +81,9 @@ const mapPinsToView = (pins: PinResponse[] | undefined): BoardPin[] => {
         ...pin,
         id: pin.id!,
         displayImage: resolvedImage ?? undefined,
-        displayVideo: resolvedImage ? undefined : resolvedVideo,
-        primaryMedia: resolvedImage ?? resolvedVideo ?? PLACEHOLDER_PIN,
+        // Show video if videoUrl exists (video pins may have both imageUrl as thumbnail and videoUrl)
+        displayVideo: resolvedVideo ?? undefined,
+        primaryMedia: resolvedVideo ?? resolvedImage ?? PLACEHOLDER_PIN,
       };
     });
 };
@@ -137,6 +138,18 @@ const ViewBoard: React.FC = () => {
   // Sent invitations/requests from API
   const [collabRequests, setCollabRequests] = useState<CollabRequest[]>([]);
 
+  // Edit/Delete Board Modal States
+  const [showEditBoardModal, setShowEditBoardModal] = useState(false);
+  const [showDeleteBoardModal, setShowDeleteBoardModal] = useState(false);
+  const [editBoardForm, setEditBoardForm] = useState({ title: '', description: '', isPrivate: false });
+  const [isUpdatingBoard, setIsUpdatingBoard] = useState(false);
+  const [isDeletingBoard, setIsDeletingBoard] = useState(false);
+
+  // Edit/Delete Pin States
+  const [deletePinConfirm, setDeletePinConfirm] = useState<BoardPin | null>(null);
+  const [isDeletingPin, setIsDeletingPin] = useState(false);
+  const [openPinMenuId, setOpenPinMenuId] = useState<number | null>(null);
+
   const [boardDetails, setBoardDetails] = useState<BoardDetails | null>(
     initialBoard
       ? {
@@ -159,6 +172,11 @@ const ViewBoard: React.FC = () => {
   const [boardPins, setBoardPins] = useState<BoardPin[]>([]);
   const [pinsLoading, setPinsLoading] = useState(false);
   const [pinsError, setPinsError] = useState("");
+
+  // Sort and Filter states
+  const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'a-z' | 'z-a'>('newest');
+  const [filterText, setFilterText] = useState('');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const queryBoardId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -294,18 +312,57 @@ const ViewBoard: React.FC = () => {
   const pinCountLabel = pinsLoading ? "Loading pins..." : `${totalPins} Pins`;
   const missingBoardSelection = !resolvedBoardId;
 
+  // Sort and filter pins
+  const sortedAndFilteredPins = useMemo(() => {
+    let filtered = [...boardPins];
+    
+    // Filter by text
+    if (filterText.trim()) {
+      const searchLower = filterText.toLowerCase();
+      filtered = filtered.filter(pin => 
+        pin.title?.toLowerCase().includes(searchLower) ||
+        pin.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Sort pins
+    switch (sortOption) {
+      case 'newest':
+        filtered.sort((a, b) => b.id - a.id);
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => a.id - b.id);
+        break;
+      case 'a-z':
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        break;
+      case 'z-a':
+        filtered.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+        break;
+    }
+    
+    return filtered;
+  }, [boardPins, sortOption, filterText]);
+
+  const handleSortChange = (option: 'newest' | 'oldest' | 'a-z' | 'z-a') => {
+    setSortOption(option);
+    setShowSortDropdown(false);
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
 
   const handlePinClick = (pin: BoardPin) => {
-    const media = pin.displayImage ?? pin.displayVideo ?? pin.primaryMedia ?? PLACEHOLDER_PIN;
+    const imageMedia = pin.displayImage ?? pin.primaryMedia ?? PLACEHOLDER_PIN;
+    const videoMedia = pin.displayVideo || (pin.videoUrl ? mapMediaPath(pin.videoUrl, API_BASE_URL) : undefined);
 
     navigate("/viewpin", {
       state: {
         pin: {
           id: pin.id,
-          image: media,
+          image: imageMedia,
+          videoUrl: videoMedia,
           title: pin.title ?? "Pin",
           description: pin.description ?? "Check out this pin from the board!",
           // Pass user info from backend (flat fields from PinViewDTO)
@@ -315,6 +372,7 @@ const ViewBoard: React.FC = () => {
           userProfilePath: pin.userProfilePath,
           // Also pass nested user object if present
           user: pin.user,
+          boardId: pin.boardId
         }
       }
     });
@@ -322,6 +380,101 @@ const ViewBoard: React.FC = () => {
 
   const handleAddPin = () => {
     navigate("/create-pin");
+  };
+
+  // Edit Board Handlers
+  const handleEditBoardClick = () => {
+    if (boardDetails) {
+      setEditBoardForm({
+        title: boardDetails.title,
+        description: boardDetails.description || '',
+        isPrivate: boardDetails.isPrivate || false
+      });
+      setShowEditBoardModal(true);
+    }
+  };
+
+  const handleEditBoardSave = async () => {
+    if (!resolvedBoardId || !editBoardForm.title.trim()) return;
+    
+    setIsUpdatingBoard(true);
+    try {
+      await axios.put(`${API_BASE_URL}/board/boards/${resolvedBoardId}`, {
+        title: editBoardForm.title.trim(),
+        description: editBoardForm.description.trim(),
+        isPrivate: editBoardForm.isPrivate
+      });
+      
+      setBoardDetails(prev => prev ? {
+        ...prev,
+        title: editBoardForm.title.trim(),
+        description: editBoardForm.description.trim(),
+        isPrivate: editBoardForm.isPrivate
+      } : null);
+      
+      setShowEditBoardModal(false);
+    } catch (error) {
+      console.error("Error updating board:", error);
+      alert("Failed to update board. Please try again.");
+    } finally {
+      setIsUpdatingBoard(false);
+    }
+  };
+
+  // Delete Board Handler
+  const handleDeleteBoardConfirm = async () => {
+    if (!resolvedBoardId) return;
+    
+    setIsDeletingBoard(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/board/boards/${resolvedBoardId}`);
+      navigate(-1);
+    } catch (error) {
+      console.error("Error deleting board:", error);
+      alert("Failed to delete board. Please try again.");
+    } finally {
+      setIsDeletingBoard(false);
+    }
+  };
+
+  // Edit Pin Handler
+  const handleEditPin = (e: React.MouseEvent, pin: BoardPin) => {
+    e.stopPropagation();
+    navigate("/create-pin", {
+      state: {
+        pinId: pin.id,
+        pin: {
+          id: pin.id,
+          title: pin.title,
+          description: pin.description,
+          imageUrl: pin.displayImage,
+          videoUrl: pin.displayVideo,
+          boardId: pin.boardId
+        }
+      }
+    });
+  };
+
+  // Delete Pin Handlers
+  const handleDeletePinClick = (e: React.MouseEvent, pin: BoardPin) => {
+    e.stopPropagation();
+    setDeletePinConfirm(pin);
+  };
+
+  const handleDeletePinConfirm = async () => {
+    if (!deletePinConfirm) return;
+    
+    setIsDeletingPin(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/pins/${deletePinConfirm.id}`);
+      setBoardPins(prev => prev.filter(p => p.id !== deletePinConfirm.id));
+      setDeletePinConfirm(null);
+    } catch (error) {
+      console.error("Error deleting pin:", error);
+      alert("Failed to delete pin. Please try again.");
+    } finally {
+      setIsDeletingPin(false);
+    }
   };
 
   const handleSendCollabRequest = async () => {
@@ -461,24 +614,116 @@ const ViewBoard: React.FC = () => {
                     <span className="collab-count">{collaborators.length}</span>
                   )}
                 </button>
-                <button className="viewboard-action-btn" onClick={handleAddPin}>
+                <button className="viewboard-action-btn" onClick={handleAddPin} title="Add Pin">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 4v16m-8-8h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </button>
-                <button className="viewboard-action-btn">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                  </svg>
-                </button>
+                {isOwner && (
+                  <>
+                    <button className="viewboard-action-btn" onClick={handleEditBoardClick} title="Edit Board">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      </svg>
+                    </button>
+                    <button className="viewboard-action-btn viewboard-delete-btn" onClick={() => setShowDeleteBoardModal(true)} title="Delete Board">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                      </svg>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Pins Grid */}
             <div className="viewboard-pins-section">
+              {/* Sort and Filter Controls */}
+              <div className="viewboard-controls">
+                <div className="viewboard-filter">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#767676">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                  </svg>
+                  <input
+                    type="text"
+                    className="viewboard-filter-input"
+                    placeholder="Filter pins..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                  />
+                  {filterText && (
+                    <button className="viewboard-filter-clear" onClick={() => setFilterText('')}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#767676">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                
+                <div className="viewboard-sort">
+                  <button 
+                    className="viewboard-sort-btn"
+                    onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                    </svg>
+                    <span>
+                      {sortOption === 'newest' && 'Newest'}
+                      {sortOption === 'oldest' && 'Oldest'}
+                      {sortOption === 'a-z' && 'A-Z'}
+                      {sortOption === 'z-a' && 'Z-A'}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                  </button>
+                  {showSortDropdown && (
+                    <div className="viewboard-sort-dropdown">
+                      <button 
+                        className={`sort-option ${sortOption === 'newest' ? 'active' : ''}`}
+                        onClick={() => handleSortChange('newest')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+                        </svg>
+                        Newest First
+                      </button>
+                      <button 
+                        className={`sort-option ${sortOption === 'oldest' ? 'active' : ''}`}
+                        onClick={() => handleSortChange('oldest')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+                        </svg>
+                        Oldest First
+                      </button>
+                      <button 
+                        className={`sort-option ${sortOption === 'a-z' ? 'active' : ''}`}
+                        onClick={() => handleSortChange('a-z')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                        </svg>
+                        Title A-Z
+                      </button>
+                      <button 
+                        className={`sort-option ${sortOption === 'z-a' ? 'active' : ''}`}
+                        onClick={() => handleSortChange('z-a')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                        </svg>
+                        Title Z-A
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               {pinsLoading && <p className="viewboard-loading">Loading pins...</p>}
               <div className="viewboard-pins-masonry">
-                {boardPins.map(pin => (
+                {sortedAndFilteredPins.map(pin => (
                   <div 
                     key={pin.id} 
                     className="viewboard-pin-card"
@@ -491,35 +736,91 @@ const ViewBoard: React.FC = () => {
                         muted
                         loop
                         playsInline
+                        onMouseEnter={(e) => e.currentTarget.play()}
+                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                       />
                     ) : (
-                      <img src={pin.primaryMedia} alt={pin.title ?? "Pin"} className="viewboard-pin-image" />
+                      <img 
+                        src={pin.displayImage || pin.primaryMedia} 
+                        alt={pin.title ?? "Pin"} 
+                        className="viewboard-pin-image"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== PLACEHOLDER_PIN) {
+                            target.src = PLACEHOLDER_PIN;
+                          }
+                        }}
+                      />
                     )}
-                    <div className="viewboard-pin-overlay">
-                      <button className="viewboard-pin-edit-btn" onClick={(e) => { e.stopPropagation(); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                      </button>
-                    </div>
+                    {isOwner && (
+                      <div className="viewboard-pin-menu" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          className="viewboard-pin-menu-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenPinMenuId(openPinMenuId === pin.id ? null : pin.id);
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#333">
+                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                          </svg>
+                        </button>
+                        {openPinMenuId === pin.id && (
+                          <div className="viewboard-pin-menu-dropdown">
+                            <button 
+                              className="viewboard-pin-menu-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPinMenuId(null);
+                                handleEditPin(e, pin);
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                              </svg>
+                              Edit
+                            </button>
+                            <button 
+                              className="viewboard-pin-menu-item delete-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPinMenuId(null);
+                                handleDeletePinClick(e, pin);
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Empty State (if no pins) */}
-            {!pinsLoading && boardPins.length === 0 && (
+            {!pinsLoading && sortedAndFilteredPins.length === 0 && (
               <div className="viewboard-empty">
                 <div className="viewboard-empty-icon">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="#767676">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
                   </svg>
                 </div>
-                <h3 className="viewboard-empty-title">No Pins yet</h3>
-                <p className="viewboard-empty-text">Add pins to this board to get started</p>
-                <button className="viewboard-add-btn" onClick={handleAddPin}>
-                  Add Pin
-                </button>
+                <h3 className="viewboard-empty-title">
+                  {filterText ? 'No matching pins' : 'No Pins yet'}
+                </h3>
+                <p className="viewboard-empty-text">
+                  {filterText ? 'Try a different search term' : 'Add pins to this board to get started'}
+                </p>
+                {!filterText && (
+                  <button className="viewboard-add-btn" onClick={handleAddPin}>
+                    Add Pin
+                  </button>
+                )}
               </div>
             )}
 
@@ -725,6 +1026,71 @@ const ViewBoard: React.FC = () => {
               </div>
             )}
           </>
+        )}
+
+        {/* Edit Board Modal */}
+        {showEditBoardModal && (
+          <div className="modal-overlay" onClick={() => setShowEditBoardModal(false)}>
+            <div className="edit-board-modal" onClick={(e) => e.stopPropagation()}>
+              <h2>Edit Board</h2>
+              <div className="form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={editBoardForm.title}
+                  onChange={(e) => setEditBoardForm({...editBoardForm, title: e.target.value})}
+                  placeholder="Board title"
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={editBoardForm.description}
+                  onChange={(e) => setEditBoardForm({...editBoardForm, description: e.target.value})}
+                  placeholder="Board description (optional)"
+                  rows={3}
+                />
+              </div>
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setShowEditBoardModal(false)}>Cancel</button>
+                <button className="save-btn" onClick={handleEditBoardSave} disabled={isUpdatingBoard}>
+                  {isUpdatingBoard ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Board Modal */}
+        {showDeleteBoardModal && (
+          <div className="modal-overlay" onClick={() => setShowDeleteBoardModal(false)}>
+            <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h2>Delete Board?</h2>
+              <p>This will permanently delete this board and all its pins. This action cannot be undone.</p>
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setShowDeleteBoardModal(false)}>Cancel</button>
+                <button className="delete-btn" onClick={handleDeleteBoardConfirm} disabled={isDeletingBoard}>
+                  {isDeletingBoard ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Pin Modal */}
+        {deletePinConfirm && (
+          <div className="modal-overlay" onClick={() => setDeletePinConfirm(null)}>
+            <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h2>Delete Pin?</h2>
+              <p>This will remove this pin from the board. This action cannot be undone.</p>
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setDeletePinConfirm(null)}>Cancel</button>
+                <button className="delete-btn" onClick={handleDeletePinConfirm} disabled={isDeletingPin}>
+                  {isDeletingPin ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

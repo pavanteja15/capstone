@@ -1,14 +1,13 @@
 
 import { Routes, Route, BrowserRouter, useLocation } from "react-router-dom";
 import CreatePin from "./CreatePin"; 
-import SelectBoard from "./SelectBoard";
 import CreateBoardForm from "./CreateBoardForm";
 import Home from "./screens/home";
 import UserProfile from "./screens/UserProfile";
 
 import SideNav from "./components/global/SideNav";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import CreateMenu from "./components/global/CreateMenu";
 
@@ -32,6 +31,11 @@ import Search from "./screens/Search";
 import BusinessProfiles from "./screens/BusinessProfiles";
 import Sponsored from "./screens/Sponsored";
 
+import { useAppDispatch } from "./store/hooks";
+import { setUser } from "./store/userSlice";
+import { isAuthenticated, getStoredUser } from "./utils/authUtils";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
 
 
  
@@ -39,8 +43,31 @@ import Sponsored from "./screens/Sponsored";
 const AppRoutes = () => {
   const [showMenu,setShowMenu] = useState(false);
   const location = useLocation();
+  const dispatch = useAppDispatch();
   const hideSideNavRoutes = ["/"];
   const shouldShowSideNav = !hideSideNavRoutes.includes(location.pathname);
+
+  // Restore user session from localStorage on app load
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        dispatch(setUser({
+          userId: storedUser.userId,
+          name: storedUser.name,
+          email: storedUser.email,
+          username: storedUser.username,
+          mobile: storedUser.mobile,
+          bio: storedUser.bio,
+          profilePath: storedUser.profilePath,
+          accountType: storedUser.accountType,
+          businessName: storedUser.businessName || '',
+          websiteUrl: storedUser.websiteUrl || '',
+          description: storedUser.description || ''
+        }));
+      }
+    }
+  }, [dispatch]);
 
   return (
     <>
@@ -54,39 +81,37 @@ const AppRoutes = () => {
 
             <Route path="/" element={<PinterestHero/>} />
 
-            <Route path="/select-board" element={<SelectBoard/>} />
+            <Route path="/create-board" element={<ProtectedRoute><CreateBoardForm/></ProtectedRoute>} />  
 
-            <Route path="/create-board" element={<CreateBoardForm/>} />  
+            <Route path="/home" element={<ProtectedRoute><Home/></ProtectedRoute>} />  
 
-            <Route path="/home" element={<Home/>} />  
+            <Route path="/profile" element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />  
 
-            <Route path="/profile" element={<UserProfile/>} />  
+            <Route path="/create-pin" element={<ProtectedRoute><CreatePin/></ProtectedRoute>}/>
 
-            <Route path="/create-board" element={<CreateBoardForm/>}/>
+            <Route path="/explore" element={<ProtectedRoute><Explore/></ProtectedRoute>}/>
 
-            <Route path="/create-pin" element={<CreatePin/>}/>
+            <Route path="/viewpin" element={<ProtectedRoute><ViewPin/></ProtectedRoute>}/>
 
-            <Route path="/explore" element={<Explore/>}/>
-
-            <Route path="/viewpin" element={<ViewPin/>}/>
-
-            <Route path="/board-view" element={<ShowBoards/>}/>
+            <Route path="/board-view" element={<ProtectedRoute><ShowBoards/></ProtectedRoute>}/>
 
             <Route path="/Register" element={<RegisterUser/>}/>
 
-            <Route path="/board-viewpage" element={<BoardViewPage/>}/>
+            <Route path="/board-viewpage" element={<ProtectedRoute><BoardViewPage/></ProtectedRoute>}/>
 
-            <Route path="/viewboard" element={<ViewBoard/>}/>
+            <Route path="/viewboard" element={<ProtectedRoute><ViewBoard/></ProtectedRoute>}/>
 
-            <Route path="/collabs" element={<Collabs/>}/>
+            <Route path="/collabs" element={<ProtectedRoute><Collabs/></ProtectedRoute>}/>
 
-            <Route path="/viewprofile" element={<ViewProfile/>}/>
+            <Route path="/viewprofile" element={<ProtectedRoute><ViewProfile/></ProtectedRoute>}/>
 
-            <Route path="/search" element={<Search/>}/>
+            <Route path="/viewprofile/:userId" element={<ProtectedRoute><ViewProfile/></ProtectedRoute>}/>
 
-            <Route path="/business-profiles" element={<BusinessProfiles/>}/>
+            <Route path="/search" element={<ProtectedRoute><Search/></ProtectedRoute>}/>
 
-            <Route path="/sponsored" element={<Sponsored/>}/>
+            <Route path="/business-profiles" element={<ProtectedRoute><BusinessProfiles/></ProtectedRoute>}/>
+
+            <Route path="/sponsored" element={<ProtectedRoute><Sponsored/></ProtectedRoute>}/>
 
       </Routes>
     </>

@@ -1,17 +1,22 @@
 
-import React from "react";
+import React, { useState } from "react";
 
 import CategoryGrid from "../components/explore/category";
 import Explorepins from "../components/explore/pins";
 
-const Explore = ()=>{
+const Explore = () => {
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
     return (
         <>
-            <CategoryGrid/>
-            <Explorepins/>
+            <CategoryGrid 
+                onCategorySelect={setSelectedCategory} 
+                selectedCategory={selectedCategory} 
+            />
+            <Explorepins selectedCategory={selectedCategory} />
         </>
-    )
-}
+    );
+};
 
 export default Explore;
 

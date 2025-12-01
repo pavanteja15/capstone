@@ -369,14 +369,28 @@
   break-inside: avoid;
   margin-bottom: 16px;
   cursor: pointer;
-  border-radius: 16px;
-  overflow: hidden;
   position: relative;
   line-height: 0;
 }
 
 .pin-card:hover {
   opacity: 0.9;
+}
+
+/* Draft Label for unpublished pins */
+.pin-draft-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  z-index: 3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .pin-image {
@@ -386,9 +400,20 @@
   border-radius: 16px;
 }
 
+/* Video pins in profile */
+.pin-video {
+  object-fit: cover;
+  min-height: 120px;
+  max-height: 300px;
+  border-radius: 16px;
+}
+
 .pin-hover-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: flex-end;
@@ -592,4 +617,406 @@
   .saved-masonry {
     column-count: 2;
   }
+}
+
+/* ========================================= */
+/* Pin Delete Button */
+/* ========================================= */
+
+.pin-delete-btn {
+  background: rgba(230, 0, 35, 0.8);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-left: 8px;
+}
+
+.pin-delete-btn:hover {
+  background: #e60023;
+  transform: scale(1.1);
+}
+
+/* Pin Delete Modal */
+.pin-delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.pin-delete-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.pin-delete-modal h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: #111;
+}
+
+.pin-delete-modal p {
+  margin: 0 0 24px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.pin-delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.pin-delete-cancel-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e9e9e9;
+  color: #111;
+  transition: background 0.2s;
+}
+
+.pin-delete-cancel-btn:hover:not(:disabled) {
+  background: #d5d5d5;
+}
+
+.pin-delete-confirm-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e60023;
+  color: white;
+  transition: background 0.2s;
+}
+
+.pin-delete-confirm-btn:hover:not(:disabled) {
+  background: #ad081b;
+}
+
+.pin-delete-confirm-btn:disabled,
+.pin-delete-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================= */
+/* Board Actions (Edit/Delete buttons) */
+/* ========================================= */
+
+.board-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 3;
+}
+
+.board-card:hover .board-actions {
+  opacity: 1;
+}
+
+.board-action-btn {
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.board-action-btn:hover {
+  transform: scale(1.1);
+}
+
+.board-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.board-delete-btn:hover {
+  background: #e60023;
+}
+
+.board-private-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+.board-pin-count {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 12px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 8px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+/* ========================================= */
+/* Board Modal (Edit/Delete) */
+/* ========================================= */
+
+.board-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.board-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.board-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.board-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #111;
+}
+
+.board-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.board-modal-close:hover {
+  background: #f0f0f0;
+}
+
+.board-modal-content {
+  padding: 20px;
+}
+
+.board-modal-field {
+  margin-bottom: 20px;
+}
+
+.board-modal-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.board-modal-field input,
+.board-modal-field textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #cdcdcd;
+  border-radius: 16px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.board-modal-field input:focus,
+.board-modal-field textarea:focus {
+  outline: none;
+  border-color: #0074e8;
+}
+
+.board-modal-field textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.board-modal-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.board-modal-toggle label:first-child {
+  margin-bottom: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #e60023;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.board-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+}
+
+.board-modal-cancel {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e9e9e9;
+  color: #111;
+  transition: background 0.2s;
+}
+
+.board-modal-cancel:hover:not(:disabled) {
+  background: #d5d5d5;
+}
+
+.board-modal-save {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e60023;
+  color: white;
+  transition: background 0.2s;
+}
+
+.board-modal-save:hover:not(:disabled) {
+  background: #ad081b;
+}
+
+.board-modal-save:disabled,
+.board-modal-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.board-modal-delete {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e60023;
+  color: white;
+  transition: background 0.2s;
+}
+
+.board-modal-delete:hover:not(:disabled) {
+  background: #ad081b;
+}
+
+.board-modal-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.board-delete-modal {
+  padding: 24px;
+  text-align: center;
+}
+
+.board-delete-modal h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+}
+
+.board-delete-modal p {
+  margin: 0 0 24px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.board-delete-modal .board-modal-actions {
+  border-top: none;
+  padding: 0;
+  justify-content: center;
 }
